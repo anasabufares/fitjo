@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FitJo — Admin</title>
+  <link rel="icon" type="image/png" href="../icons/icon-192.png" />
+  <link rel="stylesheet" href="../css/styles.css" />
+  <link rel="stylesheet" href="admin.css" />
+</head>
+<body class="admin-body">
+
+  <!-- Password gate -->
+  <div class="gate" id="gate">
+    <div class="gate-card">
+      <div class="logo">🏋️</div>
+      <h1>FitJo Admin</h1>
+      <p>Enter the admin password to manage gyms.</p>
+      <input id="gatePass" type="password" placeholder="Admin password" autocomplete="current-password" />
+      <div class="gate-err" id="gateErr"></div>
+      <button class="abtn" id="gateBtn" style="width:100%">Unlock</button>
+    </div>
+  </div>
+
+  <!-- Dashboard (hidden until unlocked) -->
+  <div id="dash" style="display:none">
+    <div class="admin-top">
+      <div class="admin-top-inner">
+        <div class="admin-brand">
+          <span class="logo">🏋️</span>
+          <span>FitJo<small>Admin dashboard</small></span>
+        </div>
+        <div class="admin-spacer"></div>
+        <span class="pill" id="serverPill"><span class="dot"></span><span id="serverPillText">Checking…</span></span>
+        <button class="abtn ghost sm" id="themeBtn" title="Theme">🌙</button>
+        <a class="abtn ghost sm" href="/" target="_blank" rel="noopener">View app ↗</a>
+        <button class="abtn ghost sm" id="backupBtn">Download backup</button>
+        <button class="abtn ghost sm" id="signOutBtn">Sign out</button>
+      </div>
+    </div>
+
+    <div class="admin-wrap">
+      <div class="banner" id="serverBanner" style="display:none">
+        <b>Cloud not reachable:</b> the gym store (Netlify Function) didn't respond. Editing still works,
+        but <b>saving won't</b> until this page is opened on your deployed Netlify site with the
+        <code>gyms</code> function and <code>ADMIN_PASSWORD</code> set. (It can't save from a plain local file.)
+      </div>
+
+      <div class="admin-head">
+        <h1>Gyms</h1>
+        <span class="count" id="gymCount"></span>
+      </div>
+
+      <div class="gym-list" id="gymList"></div>
+      <button class="add-card" id="addBtn">＋ Add a gym</button>
+    </div>
+  </div>
+
+  <!-- Editor modal -->
+  <div class="ed-back" id="edBack">
+    <div class="ed-modal">
+      <header>
+        <h2 id="edTitle">Edit gym</h2>
+        <button class="iconbtn" id="edClose" aria-label="Close">✕</button>
+      </header>
+      <div class="ed-body" id="edBody"></div>
+      <div class="ed-foot">
+        <button class="abtn ghost" id="edCancel">Cancel</button>
+        <button class="abtn" id="edSave">Save gym</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="atoast" id="atoast"></div>
+
+  <!-- data.js gives us GYMS, FACILITIES, CURRENCIES; admin.js drives the dashboard. -->
+  <!-- ../js/data.js = shared gym seed + facilities; admin.js = this dashboard's logic -->
+  <script src="../js/data.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>

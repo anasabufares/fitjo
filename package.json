@@ -1,0 +1,9 @@
+{
+  "name": "fitjo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "FitJo — gym finder for Amman. Static site (public/) + a Netlify Function for the admin gym store.",
+  "dependencies": {
+    "@netlify/blobs": "^8.1.0"
+  }
+}

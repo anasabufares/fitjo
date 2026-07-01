@@ -1,0 +1,162 @@
+/* =============================================================
+   FitJo — admin dashboard styles (reuses the app's CSS variables)
+   ============================================================= */
+
+.admin-body { background: var(--bg); color: var(--text); min-height: 100vh; }
+
+.admin-wrap { max-width: 1000px; margin: 0 auto; padding: 18px 16px 60px; }
+
+/* ---- Top bar ---- */
+.admin-top {
+  position: sticky; top: 0; z-index: 20;
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+.admin-top-inner {
+  max-width: 1000px; margin: 0 auto; padding: 12px 16px;
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+}
+.admin-brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 18px; }
+.admin-brand small { display: block; font-size: 11px; font-weight: 600; color: var(--muted); }
+.admin-brand .logo { font-size: 24px; }
+.admin-spacer { flex: 1; }
+
+.pill {
+  font-size: 12px; font-weight: 700; padding: 6px 11px; border-radius: 999px;
+  border: 1px solid var(--border); display: inline-flex; align-items: center; gap: 6px;
+}
+.pill .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+.pill.ok    { color: #16a34a; border-color: #16a34a55; } .pill.ok .dot    { background: #16a34a; }
+.pill.warn  { color: #ea580c; border-color: #ea580c55; } .pill.warn .dot  { background: #ea580c; }
+
+/* ---- Buttons ---- */
+.abtn {
+  border: none; border-radius: 10px; padding: 9px 15px; font-size: 13px; font-weight: 700;
+  cursor: pointer; background: var(--accent); color: #fff;
+}
+.abtn.ghost { background: var(--surface-2); color: var(--text); border: 1px solid var(--border); }
+.abtn.danger { background: #ef4444; color: #fff; }
+.abtn.sm { padding: 6px 10px; font-size: 12px; }
+.abtn:disabled { opacity: .5; cursor: not-allowed; }
+.iconbtn {
+  border: 1px solid var(--border); background: var(--surface-2); color: var(--text);
+  width: 34px; height: 34px; border-radius: 9px; cursor: pointer; font-size: 15px;
+}
+
+/* ---- Banner ---- */
+.banner {
+  border: 1px solid #ea580c55; background: #ea580c14; color: var(--text);
+  border-radius: var(--radius); padding: 12px 14px; font-size: 13px; margin-bottom: 16px;
+}
+.banner b { color: #ea580c; }
+.banner code { background: var(--surface-2); padding: 1px 6px; border-radius: 6px; font-size: 12px; }
+
+.admin-head { display: flex; align-items: baseline; gap: 12px; margin: 4px 2px 14px; flex-wrap: wrap; }
+.admin-head h1 { font-size: 22px; }
+.admin-head .count { color: var(--muted); font-size: 14px; }
+
+/* ---- Gym list ---- */
+.gym-list { display: grid; gap: 10px; }
+.gym-row {
+  display: flex; align-items: center; gap: 14px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 12px 14px; box-shadow: var(--shadow);
+}
+.gym-swatch { width: 46px; height: 46px; border-radius: 12px; flex: none; }
+.gym-row .info { flex: 1; min-width: 0; }
+.gym-row .info .nm { font-weight: 800; font-size: 15px; }
+.gym-row .info .sub { color: var(--muted); font-size: 12.5px; margin-top: 2px; }
+.gym-row .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 5px; }
+.tag {
+  font-size: 11px; font-weight: 700; color: var(--muted);
+  border: 1px solid var(--border); border-radius: 999px; padding: 2px 8px;
+}
+.gym-row .acts { display: flex; gap: 6px; flex: none; }
+
+.add-card {
+  border: 2px dashed var(--border); background: transparent; color: var(--muted);
+  border-radius: var(--radius); padding: 16px; font-weight: 700; font-size: 14px;
+  cursor: pointer; width: 100%; margin-top: 10px;
+}
+.add-card:hover { color: var(--accent); border-color: var(--accent); }
+
+/* ---- Editor modal ---- */
+.ed-back {
+  position: fixed; inset: 0; background: rgba(2, 6, 23, .55); backdrop-filter: blur(2px);
+  display: none; align-items: flex-start; justify-content: center; z-index: 40; padding: 24px 14px;
+  overflow-y: auto;
+}
+.ed-back.show { display: flex; }
+.ed-modal {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  width: 100%; max-width: 720px; box-shadow: var(--shadow); margin: auto;
+}
+.ed-modal header {
+  display: flex; align-items: center; gap: 10px; padding: 16px 18px;
+  border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--surface);
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+.ed-modal header h2 { font-size: 17px; flex: 1; }
+.ed-body { padding: 16px 18px; }
+.ed-foot {
+  padding: 14px 18px; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end;
+  position: sticky; bottom: 0; background: var(--surface); border-radius: 0 0 var(--radius) var(--radius);
+}
+
+.ed-section { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em;
+  color: var(--muted); margin: 18px 0 8px; }
+.ed-section:first-child { margin-top: 0; }
+
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 12px; }
+.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px 12px; }
+@media (max-width: 560px) { .grid2, .grid3 { grid-template-columns: 1fr; } }
+
+.fld label { display: block; font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 5px; }
+.fld input, .fld select, .fld textarea {
+  width: 100%; padding: 9px 10px; border-radius: 10px; border: 1px solid var(--border);
+  background: var(--surface-2); color: var(--text); font-size: 14px; font-family: inherit;
+}
+.fld input[dir="rtl"] { text-align: right; }
+.fld .hint { font-size: 11px; color: var(--muted); margin-top: 3px; }
+
+.checkgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
+.checkgrid label {
+  display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600;
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: 9px; padding: 8px 10px; cursor: pointer;
+}
+.checkgrid input { width: 16px; height: 16px; }
+
+.repeat-row {
+  display: grid; gap: 8px; align-items: end; margin-bottom: 8px;
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 10px;
+}
+.repeat-row .rm { justify-self: end; }
+@media (max-width: 620px) { .repeat-row { grid-template-columns: 1fr !important; } }
+.switch { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; font-size: 13px; cursor: pointer; }
+
+/* ---- Passcode gate ---- */
+.gate {
+  position: fixed; inset: 0; background: var(--bg); z-index: 100;
+  display: flex; align-items: center; justify-content: center; padding: 20px;
+}
+.gate-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  box-shadow: var(--shadow); padding: 28px 26px; width: 100%; max-width: 360px; text-align: center;
+}
+.gate-card .logo { font-size: 40px; }
+.gate-card h1 { font-size: 20px; margin: 8px 0 4px; }
+.gate-card p { color: var(--muted); font-size: 13px; margin-bottom: 16px; }
+.gate-card input {
+  width: 100%; padding: 12px; border-radius: 11px; border: 1px solid var(--border);
+  background: var(--surface-2); color: var(--text); font-size: 15px; text-align: center; margin-bottom: 10px;
+}
+.gate-err { color: #ef4444; font-size: 13px; font-weight: 700; min-height: 18px; margin-bottom: 8px; }
+
+/* ---- Toast ---- */
+.atoast {
+  position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%) translateY(20px);
+  background: var(--text); color: var(--bg); padding: 12px 20px; border-radius: 12px;
+  font-size: 14px; font-weight: 700; opacity: 0; pointer-events: none; transition: .25s; z-index: 200;
+}
+.atoast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.atoast.err { background: #ef4444; color: #fff; }

@@ -1,0 +1,1009 @@
+/* =============================================================
+   FitJo — sample data & configuration
+   This file holds all the content. A non-technical founder can
+   edit gym info here (names, prices, hours) without touching logic.
+   NOTE: All gyms below are SAMPLE data for the prototype.
+   ============================================================= */
+
+/* ---- Currencies (base = JOD). Sample static rates. ---- */
+const CURRENCIES = {
+  JOD: { rate: 1,      symbol: "JD",  en: "Jordanian Dinar", ar: "دينار أردني" },
+  USD: { rate: 1.41,   symbol: "$",   en: "US Dollar",       ar: "دولار أمريكي" },
+  EUR: { rate: 1.30,   symbol: "€",   en: "Euro",            ar: "يورو" },
+  SAR: { rate: 5.29,   symbol: "SAR", en: "Saudi Riyal",     ar: "ريال سعودي" },
+  KWD: { rate: 0.434,  symbol: "KWD", en: "Kuwaiti Dinar",   ar: "دينار كويتي" },
+  QAR: { rate: 5.14,   symbol: "QAR", en: "Qatari Riyal",    ar: "ريال قطري" },
+};
+
+/* ---- Facilities catalogue (used by filters + cards) ---- */
+const FACILITIES = {
+  weights:  { en: "Free Weights",      ar: "أوزان حرة",       icon: "🏋️" },
+  cardio:   { en: "Cardio Zone",       ar: "منطقة كارديو",     icon: "🏃" },
+  pool:     { en: "Swimming Pool",     ar: "مسبح",             icon: "🏊" },
+  sauna:    { en: "Sauna & Steam",     ar: "ساونا وبخار",      icon: "🧖" },
+  classes:  { en: "Group Classes",     ar: "حصص جماعية",       icon: "🧘" },
+  crossfit: { en: "CrossFit Box",      ar: "كروس فيت",         icon: "💪" },
+  boxing:   { en: "Boxing",            ar: "ملاكمة",           icon: "🥊" },
+  parking:  { en: "Free Parking",      ar: "موقف مجاني",       icon: "🅿️" },
+  lockers:  { en: "Lockers",           ar: "خزائن",            icon: "🔒" },
+  showers:  { en: "Showers",           ar: "دشات",             icon: "🚿" },
+  cafe:     { en: "Juice / Café",      ar: "بار عصير / كافيه", icon: "🥤" },
+  physio:   { en: "Physiotherapy",     ar: "علاج طبيعي",       icon: "🩺" },
+};
+
+/* ---- UI text in both languages ---- */
+const I18N = {
+  en: {
+    dir: "ltr",
+    brandTag: "Gyms of Jordan",
+    heroTitle: "Find your gym in Amman",
+    heroSub: "Compare facilities, hours, pool times, trainers and prices — then subscribe in one tap.",
+    searchPlaceholder: "Search by gym name or area…",
+    filters: "Filters",
+    area: "Area",
+    allAreas: "All areas",
+    facilities: "Facilities",
+    pool: "Pool",
+    poolAny: "Any", poolYes: "With pool", poolNo: "No pool",
+    access: "Access",
+    accessAny: "Anyone", accessMixed: "Mixed", accessWomen: "Women only", accessMen: "Men only",
+    minAge: "Minimum age",
+    anyAge: "Any age",
+    maxPrice: "Max monthly price",
+    sort: "Sort by",
+    sortRating: "Top rated", sortPriceLow: "Price: low → high", sortPriceHigh: "Price: high → low",
+    resultsFound: "gyms found",
+    noResults: "No gyms match your filters. Try widening your search.",
+    clearFilters: "Clear filters",
+    all: "All gyms",
+    favorites: "Favorites",
+    favEmpty: "You haven't saved any gyms yet. Tap the heart on a gym to save it here.",
+    perMonth: "/mo",
+    from: "from",
+    viewDetails: "View details",
+    back: "Back to gyms",
+    call: "Call",
+    whatsapp: "WhatsApp",
+    openingHours: "Opening hours",
+    weekdays: "Sat – Thu", friday: "Friday",
+    poolSchedule: "Pool schedule",
+    women: "Women", men: "Men",
+    trainersTitle: "Personal trainers",
+    perSession: "/session",
+    plansTitle: "Membership plans",
+    offers: "Offers",
+    subscribe: "Subscribe",
+    reviews: "reviews",
+    comingSoonTitle: "Coming to your membership",
+    comingSoonSub: "These features are part of the full app (next build phase).",
+    f_weight: "Weight & body tracking",
+    f_workout: "Goal-based workout plans",
+    f_ai: "AI calorie tracker (photo → nutrients)",
+    f_pay: "In-app payment & digital pass",
+    payTitle: "How payment will work",
+    payBody: "You pay securely inside the app. We forward the payment to the gym. You then visit the gym once with your ID to activate your membership.",
+    close: "Close",
+    theme: "Theme", language: "Language", currency: "Currency",
+    minAgeLabel: "Min age",
+  },
+  ar: {
+    dir: "rtl",
+    brandTag: "أندية الأردن الرياضية",
+    heroTitle: "اعثر على ناديك في عمّان",
+    heroSub: "قارن المرافق والأوقات وأوقات المسبح والمدربين والأسعار — ثم اشترك بضغطة واحدة.",
+    searchPlaceholder: "ابحث باسم النادي أو المنطقة…",
+    filters: "الفلاتر",
+    area: "المنطقة",
+    allAreas: "كل المناطق",
+    facilities: "المرافق",
+    pool: "المسبح",
+    poolAny: "الكل", poolYes: "يوجد مسبح", poolNo: "بدون مسبح",
+    access: "الدخول",
+    accessAny: "الجميع", accessMixed: "مختلط", accessWomen: "نساء فقط", accessMen: "رجال فقط",
+    minAge: "العمر الأدنى",
+    anyAge: "أي عمر",
+    maxPrice: "أعلى سعر شهري",
+    sort: "ترتيب حسب",
+    sortRating: "الأعلى تقييماً", sortPriceLow: "السعر: من الأقل", sortPriceHigh: "السعر: من الأعلى",
+    resultsFound: "نادٍ",
+    noResults: "لا توجد أندية تطابق الفلاتر. جرّب توسيع البحث.",
+    clearFilters: "مسح الفلاتر",
+    all: "كل الأندية",
+    favorites: "المفضلة",
+    favEmpty: "لم تحفظ أي نادٍ بعد. اضغط على القلب لحفظ النادي هنا.",
+    perMonth: "/شهر",
+    from: "من",
+    viewDetails: "التفاصيل",
+    back: "العودة للأندية",
+    call: "اتصال",
+    whatsapp: "واتساب",
+    openingHours: "أوقات العمل",
+    weekdays: "السبت – الخميس", friday: "الجمعة",
+    poolSchedule: "جدول المسبح",
+    women: "نساء", men: "رجال",
+    trainersTitle: "المدربون الشخصيون",
+    perSession: "/جلسة",
+    plansTitle: "باقات الاشتراك",
+    offers: "العروض",
+    subscribe: "اشترك",
+    reviews: "تقييم",
+    comingSoonTitle: "قريباً ضمن اشتراكك",
+    comingSoonSub: "هذه الميزات جزء من التطبيق الكامل (المرحلة القادمة).",
+    f_weight: "تتبّع الوزن والجسم",
+    f_workout: "خطط تمارين حسب هدفك",
+    f_ai: "حاسبة السعرات بالذكاء الاصطناعي (صورة → عناصر غذائية)",
+    f_pay: "دفع داخل التطبيق وبطاقة رقمية",
+    payTitle: "كيف سيعمل الدفع",
+    payBody: "تدفع بأمان داخل التطبيق. نحوّل المبلغ إلى النادي. ثم تزور النادي مرة واحدة مع هويتك لتفعيل اشتراكك.",
+    close: "إغلاق",
+    theme: "المظهر", language: "اللغة", currency: "العملة",
+    minAgeLabel: "أدنى عمر",
+  },
+};
+
+/* ---- Amman gyms ----
+   The block between FITJO-GYMS-START and FITJO-GYMS-END is managed by the
+   admin dashboard (admin.html). Saving there rewrites everything between the
+   two markers — so edit gyms in the dashboard, or by hand here but keep the
+   markers exactly as they are. */
+/* FITJO-GYMS-START */
+const GYMS = [
+  {
+    "id": "g1",
+    "name": {
+      "en": "Iron Peak Fitness",
+      "ar": "آيرون بيك للياقة"
+    },
+    "area": {
+      "en": "Abdoun",
+      "ar": "عبدون"
+    },
+    "address": {
+      "en": "Abdoun Circle, Amman",
+      "ar": "دوار عبدون، عمّان"
+    },
+    "phone": "+96265900001",
+    "whatsapp": "+962790000001",
+    "rating": 4.8,
+    "reviews": 312,
+    "gender": "mixed",
+    "minAge": 16,
+    "gradient": "g-a",
+    "pool": true,
+    "poolHours": {
+      "women": "9:00 AM – 1:00 PM",
+      "men": "2:00 PM – 10:00 PM"
+    },
+    "hours": {
+      "weekdays": "6:00 AM – 11:00 PM",
+      "friday": "10:00 AM – 10:00 PM"
+    },
+    "facilities": [
+      "weights",
+      "cardio",
+      "pool",
+      "sauna",
+      "classes",
+      "parking",
+      "lockers",
+      "showers",
+      "cafe"
+    ],
+    "trainers": [
+      {
+        "name": "Omar H.",
+        "specialty": {
+          "en": "Muscle building",
+          "ar": "بناء العضلات"
+        },
+        "price": 15
+      },
+      {
+        "name": "Lina K.",
+        "specialty": {
+          "en": "Weight loss",
+          "ar": "خسارة الوزن"
+        },
+        "price": 14
+      }
+    ],
+    "plans": [
+      {
+        "name": {
+          "en": "Monthly",
+          "ar": "شهري"
+        },
+        "months": 1,
+        "priceJOD": 45
+      },
+      {
+        "name": {
+          "en": "Quarterly",
+          "ar": "ربع سنوي"
+        },
+        "months": 3,
+        "priceJOD": 120
+      },
+      {
+        "name": {
+          "en": "Yearly",
+          "ar": "سنوي"
+        },
+        "months": 12,
+        "priceJOD": 400
+      }
+    ],
+    "offers": [
+      {
+        "en": "First week free",
+        "ar": "أول أسبوع مجاناً"
+      }
+    ],
+    "open247": false
+  },
+  {
+    "id": "g2",
+    "name": {
+      "en": "Pulse Ladies Studio",
+      "ar": "بولس ستوديو للسيدات"
+    },
+    "area": {
+      "en": "Sweifieh",
+      "ar": "الصويفية"
+    },
+    "address": {
+      "en": "Wakalat St, Sweifieh",
+      "ar": "شارع الوكالات، الصويفية"
+    },
+    "phone": "+96265900002",
+    "whatsapp": "+962790000002",
+    "rating": 4.9,
+    "reviews": 205,
+    "gender": "women",
+    "minAge": 14,
+    "gradient": "g-b",
+    "pool": false,
+    "poolHours": null,
+    "hours": {
+      "weekdays": "7:00 AM – 10:00 PM",
+      "friday": "Closed"
+    },
+    "facilities": [
+      "weights",
+      "cardio",
+      "classes",
+      "lockers",
+      "showers",
+      "cafe",
+      "physio"
+    ],
+    "trainers": [
+      {
+        "name": "Rania S.",
+        "specialty": {
+          "en": "Toning & weight loss",
+          "ar": "شد وخسارة وزن"
+        },
+        "price": 16
+      },
+      {
+        "name": "Dana A.",
+        "specialty": {
+          "en": "Postnatal fitness",
+          "ar": "لياقة بعد الولادة"
+        },
+        "price": 18
+      }
+    ],
+    "plans": [
+      {
+        "name": {
+          "en": "Monthly",
+          "ar": "شهري"
+        },
+        "months": 1,
+        "priceJOD": 40
+      },
+      {
+        "name": {
+          "en": "Quarterly",
+          "ar": "ربع سنوي"
+        },
+        "months": 3,
+        "priceJOD": 105
+      },
+      {
+        "name": {
+          "en": "Yearly",
+          "ar": "سنوي"
+        },
+        "months": 12,
+        "priceJOD": 360
+      }
+    ],
+    "offers": [
+      {
+        "en": "Bring a friend 50% off",
+        "ar": "أحضر صديقة بخصم 50%"
+      }
+    ],
+    "open247": false
+  },
+  {
+    "id": "g3",
+    "name": {
+      "en": "Titan Strength Club",
+      "ar": "نادي تايتن للقوة"
+    },
+    "area": {
+      "en": "Shmeisani",
+      "ar": "الشميساني"
+    },
+    "address": {
+      "en": "Shmeisani, near Housing Bank",
+      "ar": "الشميساني، قرب بنك الإسكان"
+    },
+    "phone": "+96265900003",
+    "whatsapp": "+962790000003",
+    "rating": 4.6,
+    "reviews": 178,
+    "gender": "men",
+    "minAge": 16,
+    "gradient": "g-c",
+    "pool": false,
+    "poolHours": null,
+    "hours": {
+      "weekdays": "5:30 AM – 12:00 AM",
+      "friday": "1:00 PM – 11:00 PM"
+    },
+    "facilities": [
+      "weights",
+      "crossfit",
+      "boxing",
+      "cardio",
+      "sauna",
+      "parking",
+      "lockers",
+      "showers"
+    ],
+    "trainers": [
+      {
+        "name": "Khaled M.",
+        "specialty": {
+          "en": "Powerlifting",
+          "ar": "رفع أثقال"
+        },
+        "price": 20
+      },
+      {
+        "name": "Sami R.",
+        "specialty": {
+          "en": "Muscle gain",
+          "ar": "زيادة العضلات"
+        },
+        "price": 17
+      }
+    ],
+    "plans": [
+      {
+        "name": {
+          "en": "Monthly",
+          "ar": "شهري"
+        },
+        "months": 1,
+        "priceJOD": 35
+      },
+      {
+        "name": {
+          "en": "Quarterly",
+          "ar": "ربع سنوي"
+        },
+        "months": 3,
+        "priceJOD": 90
+      },
+      {
+        "name": {
+          "en": "Yearly",
+          "ar": "سنوي"
+        },
+        "months": 12,
+        "priceJOD": 300
+      }
+    ],
+    "offers": [
+      {
+        "en": "Free InBody scan monthly",
+        "ar": "فحص InBody مجاني شهرياً"
+      }
+    ],
+    "open247": true
+  },
+  {
+    "id": "g4",
+    "name": {
+      "en": "AquaLife Health Club",
+      "ar": "أكوالايف الصحي"
+    },
+    "area": {
+      "en": "Khalda",
+      "ar": "خلدا"
+    },
+    "address": {
+      "en": "Khalda, Wasfi Al-Tal St",
+      "ar": "خلدا، شارع وصفي التل"
+    },
+    "phone": "+96265900004",
+    "whatsapp": "+962790000004",
+    "rating": 4.7,
+    "reviews": 264,
+    "gender": "mixed",
+    "minAge": 12,
+    "gradient": "g-d",
+    "pool": true,
+    "poolHours": {
+      "women": "8:00 AM – 12:00 PM",
+      "men": "1:00 PM – 9:00 PM"
+    },
+    "hours": {
+      "weekdays": "6:00 AM – 11:00 PM",
+      "friday": "9:00 AM – 9:00 PM"
+    },
+    "facilities": [
+      "weights",
+      "cardio",
+      "pool",
+      "sauna",
+      "classes",
+      "parking",
+      "lockers",
+      "showers",
+      "cafe",
+      "physio"
+    ],
+    "trainers": [
+      {
+        "name": "Yousef T.",
+        "specialty": {
+          "en": "Body recomposition",
+          "ar": "إعادة تكوين الجسم"
+        },
+        "price": 16
+      },
+      {
+        "name": "Maya J.",
+        "specialty": {
+          "en": "Swimming coach",
+          "ar": "مدربة سباحة"
+        },
+        "price": 19
+      }
+    ],
+    "plans": [
+      {
+        "name": {
+          "en": "Monthly",
+          "ar": "شهري"
+        },
+        "months": 1,
+        "priceJOD": 55
+      },
+      {
+        "name": {
+          "en": "Quarterly",
+          "ar": "ربع سنوي"
+        },
+        "months": 3,
+        "priceJOD": 150
+      },
+      {
+        "name": {
+          "en": "Yearly",
+          "ar": "سنوي"
+        },
+        "months": 12,
+        "priceJOD": 500
+      }
+    ],
+    "offers": [
+      {
+        "en": "Family plan available",
+        "ar": "باقة عائلية متوفرة"
+      },
+      {
+        "en": "Free swim lesson",
+        "ar": "درس سباحة مجاني"
+      }
+    ],
+    "open247": false
+  },
+  {
+    "id": "g5",
+    "name": {
+      "en": "Core Budget Gym",
+      "ar": "كور الاقتصادي"
+    },
+    "area": {
+      "en": "Tla' Al Ali",
+      "ar": "تلاع العلي"
+    },
+    "address": {
+      "en": "Tla' Al Ali main St",
+      "ar": "شارع تلاع العلي الرئيسي"
+    },
+    "phone": "+96265900005",
+    "whatsapp": "+962790000005",
+    "rating": 4.2,
+    "reviews": 96,
+    "gender": "mixed",
+    "minAge": 15,
+    "gradient": "g-e",
+    "pool": false,
+    "poolHours": null,
+    "hours": {
+      "weekdays": "7:00 AM – 11:00 PM",
+      "friday": "2:00 PM – 10:00 PM"
+    },
+    "facilities": [
+      "weights",
+      "cardio",
+      "lockers",
+      "showers",
+      "parking"
+    ],
+    "trainers": [
+      {
+        "name": "Ahmad N.",
+        "specialty": {
+          "en": "Beginners",
+          "ar": "المبتدئين"
+        },
+        "price": 10
+      }
+    ],
+    "plans": [
+      {
+        "name": {
+          "en": "Monthly",
+          "ar": "شهري"
+        },
+        "months": 1,
+        "priceJOD": 22
+      },
+      {
+        "name": {
+          "en": "Quarterly",
+          "ar": "ربع سنوي"
+        },
+        "months": 3,
+        "priceJOD": 55
+      },
+      {
+        "name": {
+          "en": "Yearly",
+          "ar": "سنوي"
+        },
+        "months": 12,
+        "priceJOD": 180
+      }
+    ],
+    "offers": [
+      {
+        "en": "Student discount 20%",
+        "ar": "خصم طلاب 20%"
+      }
+    ],
+    "open247": false
+  },
+  {
+    "id": "g6",
+    "name": {
+      "en": "Elevate Wellness",
+      "ar": "إليفيت للعافية"
+    },
+    "area": {
+      "en": "Dabouq",
+      "ar": "دابوق"
+    },
+    "address": {
+      "en": "Dabouq, Amman",
+      "ar": "دابوق، عمّان"
+    },
+    "phone": "+96265900006",
+    "whatsapp": "+962790000006",
+    "rating": 4.9,
+    "reviews": 143,
+    "gender": "mixed",
+    "minAge": 18,
+    "gradient": "g-f",
+    "pool": true,
+    "poolHours": {
+      "women": "10:00 AM – 2:00 PM",
+      "men": "3:00 PM – 10:00 PM"
+    },
+    "hours": {
+      "weekdays": "6:00 AM – 10:00 PM",
+      "friday": "10:00 AM – 8:00 PM"
+    },
+    "facilities": [
+      "weights",
+      "cardio",
+      "pool",
+      "sauna",
+      "classes",
+      "physio",
+      "parking",
+      "lockers",
+      "showers",
+      "cafe"
+    ],
+    "trainers": [
+      {
+        "name": "Nadia F.",
+        "specialty": {
+          "en": "Yoga & mobility",
+          "ar": "يوغا ومرونة"
+        },
+        "price": 22
+      },
+      {
+        "name": "Zaid H.",
+        "specialty": {
+          "en": "Weight gain & muscle",
+          "ar": "زيادة وزن وعضل"
+        },
+        "price": 20
+      }
+    ],
+    "plans": [
+      {
+        "name": {
+          "en": "Monthly",
+          "ar": "شهري"
+        },
+        "months": 1,
+        "priceJOD": 70
+      },
+      {
+        "name": {
+          "en": "Quarterly",
+          "ar": "ربع سنوي"
+        },
+        "months": 3,
+        "priceJOD": 190
+      },
+      {
+        "name": {
+          "en": "Yearly",
+          "ar": "سنوي"
+        },
+        "months": 12,
+        "priceJOD": 650
+      }
+    ],
+    "offers": [
+      {
+        "en": "Premium spa access included",
+        "ar": "دخول السبا مشمول"
+      }
+    ],
+    "open247": false
+  },
+  {
+    "id": "g7",
+    "name": {
+      "en": "FlexZone 24/7",
+      "ar": "فليكس زون 24/7"
+    },
+    "area": {
+      "en": "Jabal Amman",
+      "ar": "جبل عمّان"
+    },
+    "address": {
+      "en": "Rainbow St, Jabal Amman",
+      "ar": "شارع الرينبو، جبل عمّان"
+    },
+    "phone": "+96265900007",
+    "whatsapp": "+962790000007",
+    "rating": 4.4,
+    "reviews": 121,
+    "gender": "mixed",
+    "minAge": 16,
+    "gradient": "g-a",
+    "pool": false,
+    "poolHours": null,
+    "hours": {
+      "weekdays": "Open 24 hours",
+      "friday": "Open 24 hours"
+    },
+    "facilities": [
+      "weights",
+      "cardio",
+      "crossfit",
+      "lockers",
+      "showers",
+      "parking",
+      "cafe"
+    ],
+    "trainers": [
+      {
+        "name": "Tariq B.",
+        "specialty": {
+          "en": "Fat loss + muscle",
+          "ar": "حرق دهون + عضل"
+        },
+        "price": 15
+      }
+    ],
+    "plans": [
+      {
+        "name": {
+          "en": "Monthly",
+          "ar": "شهري"
+        },
+        "months": 1,
+        "priceJOD": 38
+      },
+      {
+        "name": {
+          "en": "Quarterly",
+          "ar": "ربع سنوي"
+        },
+        "months": 3,
+        "priceJOD": 99
+      },
+      {
+        "name": {
+          "en": "Yearly",
+          "ar": "سنوي"
+        },
+        "months": 12,
+        "priceJOD": 330
+      }
+    ],
+    "offers": [
+      {
+        "en": "24/7 access, no peak hours",
+        "ar": "دخول 24/7 بدون أوقات ذروة"
+      }
+    ],
+    "open247": true
+  },
+  {
+    "id": "g8",
+    "name": {
+      "en": "Bloom Women's Fitness",
+      "ar": "بلوم للياقة النسائية"
+    },
+    "area": {
+      "en": "Marj Al Hamam",
+      "ar": "مرج الحمام"
+    },
+    "address": {
+      "en": "Marj Al Hamam, Amman",
+      "ar": "مرج الحمام، عمّان"
+    },
+    "phone": "+96265900008",
+    "whatsapp": "+962790000008",
+    "rating": 4.7,
+    "reviews": 88,
+    "gender": "women",
+    "minAge": 14,
+    "gradient": "g-b",
+    "pool": true,
+    "poolHours": {
+      "women": "Women only — all day",
+      "men": "—"
+    },
+    "hours": {
+      "weekdays": "8:00 AM – 9:00 PM",
+      "friday": "Closed"
+    },
+    "facilities": [
+      "weights",
+      "cardio",
+      "pool",
+      "classes",
+      "sauna",
+      "lockers",
+      "showers",
+      "cafe"
+    ],
+    "trainers": [
+      {
+        "name": "Hala Q.",
+        "specialty": {
+          "en": "Weight loss + tone",
+          "ar": "خسارة وزن وشد"
+        },
+        "price": 15
+      },
+      {
+        "name": "Sara W.",
+        "specialty": {
+          "en": "Prenatal fitness",
+          "ar": "لياقة الحمل"
+        },
+        "price": 18
+      }
+    ],
+    "plans": [
+      {
+        "name": {
+          "en": "Monthly",
+          "ar": "شهري"
+        },
+        "months": 1,
+        "priceJOD": 48
+      },
+      {
+        "name": {
+          "en": "Quarterly",
+          "ar": "ربع سنوي"
+        },
+        "months": 3,
+        "priceJOD": 130
+      },
+      {
+        "name": {
+          "en": "Yearly",
+          "ar": "سنوي"
+        },
+        "months": 12,
+        "priceJOD": 430
+      }
+    ],
+    "offers": [
+      {
+        "en": "Women-only pool all day",
+        "ar": "مسبح نسائي طوال اليوم"
+      }
+    ],
+    "open247": false
+  }
+];
+/* FITJO-GYMS-END */
+
+/* =============================================================
+   Auth / account text — merged into I18N (both languages)
+   ============================================================= */
+const AUTH_I18N = {
+  en: {
+    signIn: "Sign in", signUp: "Create account", signOut: "Sign out",
+    account: "Account", myProfile: "My profile", editProfile: "Edit profile",
+    email: "Email", password: "Password", confirmPassword: "Confirm password",
+    fullName: "Full name", age: "Age", gender: "Gender", city: "City", goal: "Fitness goal",
+    continueGoogle: "Continue with Google", orEmail: "or with email",
+    noAccount: "New here? Create an account", haveAccount: "Already have an account? Sign in",
+    forgotPw: "Forgot password?",
+    security: "Security", privacy: "Privacy", notifications: "Notifications", preferences: "Preferences",
+    changePassword: "Change password", currentPassword: "Current password", newPassword: "New password",
+    changeEmail: "Change email", newEmail: "New email",
+    twoFA: "Two-factor authentication",
+    twoFADesc: "Protect your account with a code from an authenticator app (Google Authenticator, Authy).",
+    enable: "Enable", disable: "Disable", enabled: "Enabled", disabled: "Not enabled",
+    authApp: "Authenticator app", scanCode: "Scan this in your authenticator app, or enter the key manually:",
+    enterCode: "Enter the 6-digit code", verify: "Verify & turn on",
+    passkey: "Passkey", passkeyDesc: "Sign in with your fingerprint, face, or device PIN.", addPasskey: "Add a passkey",
+    recoveryCodes: "Recovery codes", recoveryDesc: "Save these somewhere safe. Each can be used once.",
+    memberSince: "Member since", saveChanges: "Save changes", cancel: "Cancel",
+    deleteAccount: "Delete account", dangerZone: "Danger zone",
+    deleteWarn: "This permanently removes your account from this browser. This cannot be undone.",
+    confirmDelete: "Yes, delete my account",
+    goalLose: "Lose weight", goalBuild: "Build muscle", goalGain: "Gain weight",
+    goalRecomp: "Lose fat & build muscle", goalFit: "General fitness", chooseGoal: "Choose a goal",
+    genderF: "Female", genderM: "Male", genderNA: "Prefer not to say",
+    privProfilePublic: "Public profile", privShowFav: "Show my saved gyms to others",
+    privTrainerContact: "Let trainers contact me", privShareData: "Use my data for better workout plans",
+    notifOffers: "New offers & discounts", notifExpiry: "Subscription expiry reminders",
+    notifClass: "Class & booking reminders", notifNews: "News & fitness tips",
+    welcomeBack: "Welcome back 👋", createYourAccount: "Create your account",
+    pwMismatch: "Passwords don't match", pwShort: "Password must be at least 6 characters",
+    emailTaken: "That email is already registered", badLogin: "Wrong email or password",
+    ageInvalid: "Please enter a valid age (12 or older)", wrongCurrent: "Current password is incorrect",
+    emailInvalid: "Please enter a valid email", fillAll: "Please fill in all fields",
+    codeInvalid: "Enter a 6-digit code", saved: "Saved",
+    savedGyms: "Saved gyms", activeSubs: "Active memberships", noneYet: "None yet",
+    demoNote: "Demo mode: your account is saved only in this browser. Real Google sign-in & authenticator 2FA come with the backend (Phase 2).",
+    hi: "Hi", agreeAge: "I confirm the age above is correct",
+    membership: "Membership", accentColor: "Accent color", loggedOutMsg: "Sign in to save favorites and manage your membership.",
+    passwordUpdated: "Password updated", emailUpdated: "Email updated", profileUpdated: "Profile updated",
+    twoFAOn: "Two-factor authentication is on", twoFAOff: "Two-factor authentication turned off",
+  },
+  ar: {
+    signIn: "تسجيل الدخول", signUp: "إنشاء حساب", signOut: "تسجيل الخروج",
+    account: "الحساب", myProfile: "ملفي الشخصي", editProfile: "تعديل الملف",
+    email: "البريد الإلكتروني", password: "كلمة المرور", confirmPassword: "تأكيد كلمة المرور",
+    fullName: "الاسم الكامل", age: "العمر", gender: "الجنس", city: "المدينة", goal: "الهدف الرياضي",
+    continueGoogle: "المتابعة عبر جوجل", orEmail: "أو عبر البريد الإلكتروني",
+    noAccount: "جديد هنا؟ أنشئ حساباً", haveAccount: "لديك حساب؟ سجّل الدخول",
+    forgotPw: "نسيت كلمة المرور؟",
+    security: "الأمان", privacy: "الخصوصية", notifications: "الإشعارات", preferences: "التفضيلات",
+    changePassword: "تغيير كلمة المرور", currentPassword: "كلمة المرور الحالية", newPassword: "كلمة المرور الجديدة",
+    changeEmail: "تغيير البريد", newEmail: "البريد الجديد",
+    twoFA: "المصادقة الثنائية",
+    twoFADesc: "احمِ حسابك برمز من تطبيق مصادقة (Google Authenticator أو Authy).",
+    enable: "تفعيل", disable: "إيقاف", enabled: "مُفعّل", disabled: "غير مفعّل",
+    authApp: "تطبيق المصادقة", scanCode: "امسح الرمز في تطبيق المصادقة أو أدخل المفتاح يدوياً:",
+    enterCode: "أدخل الرمز المكوّن من 6 أرقام", verify: "تحقق وفعّل",
+    passkey: "مفتاح المرور", passkeyDesc: "سجّل الدخول ببصمتك أو وجهك أو رمز جهازك.", addPasskey: "إضافة مفتاح مرور",
+    recoveryCodes: "رموز الاسترداد", recoveryDesc: "احفظها في مكان آمن. كل رمز يُستخدم مرة واحدة.",
+    memberSince: "عضو منذ", saveChanges: "حفظ التغييرات", cancel: "إلغاء",
+    deleteAccount: "حذف الحساب", dangerZone: "منطقة الخطر",
+    deleteWarn: "سيؤدي هذا إلى حذف حسابك نهائياً من هذا المتصفح. لا يمكن التراجع.",
+    confirmDelete: "نعم، احذف حسابي",
+    goalLose: "خسارة الوزن", goalBuild: "بناء العضلات", goalGain: "زيادة الوزن",
+    goalRecomp: "حرق دهون وبناء عضل", goalFit: "لياقة عامة", chooseGoal: "اختر هدفاً",
+    genderF: "أنثى", genderM: "ذكر", genderNA: "أفضّل عدم القول",
+    privProfilePublic: "ملف عام", privShowFav: "إظهار أنديتي المحفوظة للآخرين",
+    privTrainerContact: "السماح للمدربين بالتواصل معي", privShareData: "استخدام بياناتي لخطط أفضل",
+    notifOffers: "عروض وخصومات جديدة", notifExpiry: "تذكير انتهاء الاشتراك",
+    notifClass: "تذكير الحصص والحجوزات", notifNews: "أخبار ونصائح رياضية",
+    welcomeBack: "مرحباً بعودتك 👋", createYourAccount: "أنشئ حسابك",
+    pwMismatch: "كلمتا المرور غير متطابقتين", pwShort: "كلمة المرور 6 أحرف على الأقل",
+    emailTaken: "هذا البريد مسجّل مسبقاً", badLogin: "بريد أو كلمة مرور خاطئة",
+    ageInvalid: "أدخل عمراً صحيحاً (12 فأكثر)", wrongCurrent: "كلمة المرور الحالية غير صحيحة",
+    emailInvalid: "أدخل بريداً صحيحاً", fillAll: "يرجى تعبئة جميع الحقول",
+    codeInvalid: "أدخل رمزاً من 6 أرقام", saved: "تم الحفظ",
+    savedGyms: "الأندية المحفوظة", activeSubs: "الاشتراكات النشطة", noneYet: "لا شيء بعد",
+    demoNote: "وضع تجريبي: حسابك محفوظ في هذا المتصفح فقط. تسجيل جوجل والمصادقة الثنائية الحقيقية تأتي مع الخادم (المرحلة 2).",
+    hi: "مرحباً", agreeAge: "أؤكد أن العمر أعلاه صحيح",
+    membership: "العضوية", accentColor: "اللون المميز", loggedOutMsg: "سجّل الدخول لحفظ المفضلة وإدارة عضويتك.",
+    passwordUpdated: "تم تحديث كلمة المرور", emailUpdated: "تم تحديث البريد", profileUpdated: "تم تحديث الملف",
+    twoFAOn: "المصادقة الثنائية مفعّلة", twoFAOff: "تم إيقاف المصادقة الثنائية",
+  },
+};
+Object.assign(I18N.en, AUTH_I18N.en);
+Object.assign(I18N.ar, AUTH_I18N.ar);
+
+/* ---- Which gyms are open 24/7 (admin stores this per gym; this is a fallback) ---- */
+GYMS.forEach(g => { if (typeof g.open247 !== "boolean") g.open247 = (g.id === "g3" || g.id === "g7"); });
+
+/* ---- Shared sample reviews (shown 3 per gym) ---- */
+const REVIEWS = [
+  { author: "Sara",     rating: 5, days: 4,  text: { en: "Clean, spacious and the trainers really know their stuff.", ar: "نظيف وواسع والمدربون محترفون فعلاً." } },
+  { author: "Mohammad", rating: 4, days: 9,  text: { en: "Great equipment. Gets a bit crowded after 6pm.", ar: "أجهزة ممتازة، لكن يزدحم قليلاً بعد السادسة مساءً." } },
+  { author: "Lana",     rating: 5, days: 15, text: { en: "Loved the women's hours and the pool is spotless.", ar: "أحببت ساعات النساء والمسبح نظيف جداً." } },
+  { author: "Yazan",    rating: 4, days: 23, text: { en: "Good value for the price and friendly staff.", ar: "قيمة ممتازة مقابل السعر وطاقم ودود." } },
+  { author: "Rana",     rating: 5, days: 31, text: { en: "Booked a personal trainer and saw results in weeks.", ar: "حجزت مدرباً شخصياً ولاحظت نتائج خلال أسابيع." } },
+  { author: "Fadi",     rating: 3, days: 40, text: { en: "Nice place, but parking can be tricky at peak times.", ar: "مكان جميل لكن الموقف صعب في أوقات الذروة." } },
+];
+
+/* ---- Shared sample weekly class schedule (shown if gym has classes) ---- */
+const CLASS_SCHEDULE = [
+  { day: { en: "Sat", ar: "السبت" },   items: [{ time: "9:00", name: { en: "Yoga", ar: "يوغا" } }, { time: "18:00", name: { en: "HIIT", ar: "هيت" } }] },
+  { day: { en: "Sun", ar: "الأحد" },   items: [{ time: "10:00", name: { en: "Spinning", ar: "سبينينغ" } }, { time: "19:00", name: { en: "Boxing", ar: "ملاكمة" } }] },
+  { day: { en: "Mon", ar: "الاثنين" }, items: [{ time: "8:00", name: { en: "Pilates", ar: "بيلاتس" } }, { time: "18:30", name: { en: "CrossFit", ar: "كروس فيت" } }] },
+  { day: { en: "Tue", ar: "الثلاثاء" }, items: [{ time: "9:00", name: { en: "Zumba", ar: "زومبا" } }, { time: "20:00", name: { en: "Strength", ar: "قوة" } }] },
+  { day: { en: "Wed", ar: "الأربعاء" }, items: [{ time: "10:00", name: { en: "Aqua fitness", ar: "لياقة مائية" } }, { time: "18:00", name: { en: "HIIT", ar: "هيت" } }] },
+  { day: { en: "Thu", ar: "الخميس" },  items: [{ time: "9:00", name: { en: "Yoga", ar: "يوغا" } }, { time: "19:00", name: { en: "Spinning", ar: "سبينينغ" } }] },
+];
+
+/* ---- Text for the new features (both languages) ---- */
+const FEAT_I18N = {
+  en: {
+    open247: "Open 24/7", h247: "24/7", filter247: "Open 24/7 only", hours247short: "24 hours",
+    busyNow: "Right now", occQuiet: "Quiet", occModerate: "Moderate", occBusy: "Busy", howBusy: "How busy is it now",
+    reviewsTitle: "Reviews", classScheduleTitle: "Class schedule",
+    compare: "Compare", compareTitle: "Compare gyms", addCompare: "Compare", inCompare: "Added",
+    clearCompare: "Clear", compareFull: "You can compare up to 3 gyms at a time",
+    cmpRating: "Rating", cmpPrice: "Monthly price", cmpAccess: "Access", cmpPool: "Pool",
+    cmp247: "Open 24/7", cmpAge: "Minimum age", cmpFacilities: "Facilities", yes: "Yes", no: "No",
+    myProgress: "My progress", weightTracker: "Weight tracker", addWeight: "Log",
+    currentWeight: "Current", startWeight: "Start", change: "Change", weightKg: "Weight (kg)",
+    noWeights: "Log your first weight to start tracking your progress.",
+  },
+  ar: {
+    open247: "مفتوح 24/7", h247: "24/7", filter247: "المفتوحة 24/7 فقط", hours247short: "24 ساعة",
+    busyNow: "الآن", occQuiet: "هادئ", occModerate: "متوسط", occBusy: "مزدحم", howBusy: "مدى الازدحام الآن",
+    reviewsTitle: "التقييمات", classScheduleTitle: "جدول الحصص",
+    compare: "قارن", compareTitle: "مقارنة الأندية", addCompare: "قارن", inCompare: "مضاف",
+    clearCompare: "مسح", compareFull: "يمكنك مقارنة 3 أندية كحد أقصى",
+    cmpRating: "التقييم", cmpPrice: "السعر الشهري", cmpAccess: "الدخول", cmpPool: "المسبح",
+    cmp247: "مفتوح 24/7", cmpAge: "العمر الأدنى", cmpFacilities: "المرافق", yes: "نعم", no: "لا",
+    myProgress: "تقدّمي", weightTracker: "متتبّع الوزن", addWeight: "تسجيل",
+    currentWeight: "الحالي", startWeight: "البداية", change: "التغيّر", weightKg: "الوزن (كغ)",
+    noWeights: "سجّل وزنك الأول لتبدأ بتتبّع تقدّمك.",
+  },
+};
+Object.assign(I18N.en, FEAT_I18N.en);
+Object.assign(I18N.ar, FEAT_I18N.ar);

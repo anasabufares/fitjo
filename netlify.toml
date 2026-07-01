@@ -1,0 +1,22 @@
+# Netlify configuration for FitJo.
+#   • Static site        -> public/
+#   • Admin gym store API -> netlify/functions/gyms.mjs  (served at /api/gyms)
+#
+# IMPORTANT: because this site now has a Function with a dependency
+# (@netlify/blobs), deploy it from Git ("Add new site → Import from Git") so
+# Netlify runs the install/bundle step. After deploying, set an env var
+# ADMIN_PASSWORD (Site settings → Environment variables) — that's the password
+# the admin dashboard asks for.
+
+[build]
+  publish = "public"
+  functions = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
+
+# The gym data comes from the function now, so don't let the browser cache it hard.
+[[headers]]
+  for = "/api/gyms"
+  [headers.values]
+    Cache-Control = "no-store"
