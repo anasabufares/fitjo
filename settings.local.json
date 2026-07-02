@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh auth *)",
+      "WebFetch(domain:github.com)",
+      "Bash(git --version)",
+      "Skill(claude-api)",
+      "Skill(claude-api:*)",
+      "Bash(py --version)"
+    ]
+  }
+}

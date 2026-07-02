@@ -6,36 +6,15 @@ It uses **sample data** and needs **no installation**.
 
 ---
 
-## 📂 Project layout
-
-```
-public/            ← the website Netlify serves
-  index.html       APP page
-  manifest.json    installable-app settings
-  css/             styles.css        (shared theme)
-  js/              data.js (shared), app.js, auth.js, plan.js   (APP only)
-  icons/           app icons
-  admin/           ← ADMIN dashboard, self-contained (open at /admin/)
-    index.html     the dashboard
-    admin.css      admin-only styles
-    admin.js       admin-only logic
-netlify/functions/
-  gyms.mjs         ← the cloud gym store (GET/POST /api/gyms)
-package.json       ← the function's dependency (@netlify/blobs)
-netlify.toml       ← publishes public/ and wires up the function
-tools/             ← optional local preview only (NOT deployed)
-  server.ps1, phone-preview.ps1
-```
-
 ## ▶️ How to open it
 
-**Easiest way:** double-click `public/index.html`. It opens in your web browser. That's it.
+**Easiest way:** double-click `index.html`. It opens in your web browser. That's it.
 
-**Nicer way (runs on a local address, for previewing the app):**
-1. Right-click inside this project folder → "Open in Terminal" (or open PowerShell here).
+**Nicer way (runs on a local address):**
+1. Right-click inside this folder → "Open in Terminal" (or open PowerShell here).
 2. Paste this and press Enter:
    ```
-   powershell -ExecutionPolicy Bypass -File tools/server.ps1
+   powershell -ExecutionPolicy Bypass -File server.ps1
    ```
 3. Open your browser to **http://localhost:8080**
 4. To stop it, press `Ctrl + C` in the terminal.
@@ -44,7 +23,7 @@ tools/             ← optional local preview only (NOT deployed)
 
 ## 📱 Add it to your phone like an app (no app store)
 
-1. Run `tools/phone-preview.ps1` on your PC and open the address it shows on your phone's browser.
+1. Run `phone-preview.ps1` on your PC and open the address it shows on your phone's browser.
 2. **iPhone (Safari):** tap **Share** → **Add to Home Screen** → **Add**.
    **Android (Chrome):** tap **⋮** menu → **Add to Home screen / Install app**.
 3. A **FitJo** icon appears on your home screen and opens full-screen like a real app.
@@ -63,6 +42,7 @@ This is a *preview* app (an installable web app). A real App Store / Google Play
 - **Class schedule** — a weekly timetable on gyms that run classes.
 - **Compare gyms** — pick up to 3 gyms and compare them side-by-side (price, pool, 24/7, rating, access, facilities).
 - **Weight & progress tracker** — in your profile: log your weight, see a chart and your start → current change.
+- **AI calorie tracker** — in your profile: snap or upload a photo of a meal and get estimated **calories, protein, carbs and fat**, tweak the portion, and **log it to your day**. A calorie ring + macro bars track the day against your plan's targets, with a short history of recent days. Works offline in **demo mode** (estimates from a built-in food library); real photo AI can be switched on later — see `AI-SETUP.md`.
 - **Personalized plan (subscription)** — fill a short form (height, weight, goal, days/week, activity, gym time, diet) and the app builds:
   - a **goal-based workout split** with exercises, sets & reps,
   - a **meal plan** and daily **calorie + protein/carb/fat** targets,
@@ -84,8 +64,7 @@ This is a *preview* app (an installable web app). A real App Store / Google Play
 
 ## 🚧 Shown as "coming soon" (next build phases)
 
-Weight tracking · goal-based workout plans · AI calorie tracker (photo → nutrients) ·
-real in-app payments & digital membership pass.
+Goal-based workout plans · real in-app payments & digital membership pass.
 
 ---
 
@@ -93,61 +72,20 @@ real in-app payments & digital membership pass.
 
 | File | What it is |
 |------|-----------|
-| `public/index.html` | The page structure. |
-| `public/css/styles.css` | All the styling and themes. |
-| `public/js/data.js` | **The content** — edit gyms, prices, hours, trainers here. |
-| `public/js/app.js` | The app logic (search, filters, favorites, translations). |
-| `public/js/auth.js` | Accounts: sign in/up, Google, profile, 2FA, privacy, settings. |
-| `public/js/plan.js` | Personalized plan: intake form, workouts, meals, water, supplements, reminders. |
-| `public/admin/` (`index.html` · `admin.js` · `admin.css`) | **Admin dashboard** — add / edit / remove gyms (live, cloud-saved). |
-| `netlify/functions/gyms.mjs` | Cloud gym store — reads/writes the list for all visitors. |
-| `package.json` | The function's dependency (`@netlify/blobs`). |
-| `netlify.toml` | Netlify config (publishes `public/`, wires the function). |
-| `tools/server.ps1` · `tools/phone-preview.ps1` | Optional local **preview** only. |
+| `index.html` | The page structure. |
+| `styles.css` | All the styling and themes. |
+| `data.js` | **The content** — edit gyms, prices, hours, trainers here. |
+| `app.js` | The app logic (search, filters, favorites, translations). |
+| `auth.js` | Accounts: sign in/up, Google, profile, 2FA, privacy, settings. |
+| `plan.js` | Personalized plan: intake form, workouts, meals, water, supplements, reminders. |
+| `nutrition.js` | AI calorie tracker: food photo analysis, editable results, daily food log & targets. |
+| `netlify/functions/analyze-food.js` | Optional cloud function for **real** photo AI (see `AI-SETUP.md`). |
+| `server.ps1` | Optional tiny local server (no install needed). |
 
-## 🌍 Deploy to Netlify (with the live admin)
+## ✏️ Want to change a gym?
 
-The admin dashboard edits gyms **on the live site** and saves them to the cloud, so every
-visitor sees the change. That needs the Netlify Function, so deploy from Git:
-
-1. **Put the project on GitHub** (create a repo and push this folder).
-2. In Netlify: **Add new site → Import from an existing project** → pick the repo → **Deploy**.
-   (`netlify.toml` already sets everything up — publish `public/`, function at `/api/gyms`.)
-3. **Set your admin password:** in Netlify go to **Site settings → Environment variables**,
-   add one named **`ADMIN_PASSWORD`** with a value of your choice, then **redeploy** (Deploys →
-   Trigger deploy) so the function picks it up.
-
-That's it — your site is live at `https://your-site.netlify.app`.
-
-> Why Git and not drag-and-drop? The admin needs a server-side function with a dependency,
-> which Netlify installs during a Git build. A plain drag-and-drop of `public/` would give you
-> the app **without** the working admin.
-
-## 🔐 Using the admin dashboard
-
-1. Open **`https://your-site.netlify.app/admin/`**.
-2. Enter your **`ADMIN_PASSWORD`** (the one you set in Netlify).
-3. **Add**, **Edit**, **Duplicate** or **Delete** any gym. Each change is saved to the cloud and
-   **shows for everyone** — refresh the app to see it. Every field is editable in English **and**
-   Arabic: name, area, address, phone/WhatsApp, rating, access, min age, pool + schedule, opening
-   hours, facilities, trainers, membership plans and offers.
-
-- The green **“Connected to cloud”** badge means saving is working. A wrong password is rejected
-  and the dashboard asks again. **Sign out** clears the password from your browser.
-- **Download backup** saves a copy of the current list (as a `data.js` block) you can keep or
-  paste into `public/js/data.js` to refresh the built-in starter list.
-- The starter list in `public/js/data.js` is only a **fallback** shown before the cloud loads (or
-  if the cloud is ever unreachable). Once you save from the admin, the cloud copy is what visitors see.
-
-> ⚠️ `ADMIN_PASSWORD` is checked on the server, so it's real protection for saving — but keep it
-> private. The passcode field alone doesn't expose it.
-
-## ✏️ Want to change a gym by hand?
-
-Edit `public/js/data.js` (the fallback list) and keep the `/* FITJO-GYMS-START */` …
-`/* FITJO-GYMS-END */` markers in place. Note this only changes the starter list — anything you've
-already saved through the admin (the cloud copy) still wins on the live site until you overwrite it
-there.
+Open `data.js`. Each gym is a block with its name, area, phone, hours, facilities,
+trainers and plans — in both English and Arabic. Edit the text and save; refresh the page.
 
 ---
 
