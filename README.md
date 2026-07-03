@@ -78,16 +78,20 @@ before the cloud loads; once you save from the admin, the cloud copy is what vis
 - **Favorites**, full **gym details** (hours, pool times, trainers, plans), payment explainer.
 - **Accounts** — sign up / sign in, "Continue with Google" (demo), profile, security (demo 2FA),
   privacy, notifications, preferences. **Sign-up + phone verification is required to enter.**
-- **Weight & progress tracker**.
+- **Weight & progress tracker** and **AI calorie tracker** (photo → calories/macros, demo mode by default).
 - **Languages** (EN/AR with RTL), **themes** (light/dark + accents), **currencies** (JOD/USD/EUR/SAR/KWD/QAR).
 - **Cloud admin dashboard** for managing gyms.
 
-## 🍎 Optional: real AI calorie analysis
+## 🍎 Calorie tracker (with optional real AI)
 
-`netlify/functions/analyze-food.js` is a ready backend that sends a food photo to Claude and
-returns estimated calories/macros. It is **dormant** — its frontend isn't wired into the
-current `public/` app yet. To enable the backend and learn how it works, see **`AI-SETUP.md`**
-(needs an `ANTHROPIC_API_KEY` in Netlify).
+In your account there's a **🍎 Calorie tracker**: snap a meal photo or type a food to get
+estimated calories + protein/carbs/fat, adjust the amount, and log it to your day. A calorie
+ring and macro bars track the day against your plan's targets, with a history of recent days.
+
+It works **in demo mode by default** (built-in food library + plausible meal guesses — no key,
+no cost). To make photos truly analyzed by AI, enable the `analyze-food` function per
+**`AI-SETUP.md`** (uncomment the `FITJO_CONFIG` line in `public/index.html` and set
+`ANTHROPIC_API_KEY` in Netlify). The frontend automatically uses the real AI once it's on.
 
 ---
 

@@ -305,6 +305,33 @@ img { max-width: 100%; }
 .demo-code { background: var(--surface-2); border: 1px dashed var(--border); border-radius: 12px; padding: 12px; font-size: 13px; color: var(--muted); text-align: center; margin-bottom: 14px; }
 .demo-code b { display: inline-block; margin-top: 4px; font-size: 24px; letter-spacing: 5px; color: var(--text); }
 
+/* ---- calorie tracker ---- */
+.cal-ring-wrap { display: flex; align-items: center; gap: 18px; margin: 14px 0 6px; }
+.cal-ring { width: 130px; height: 130px; flex: none; }
+.cal-ring .ring-bg { fill: none; stroke: var(--surface-2); stroke-width: 12; }
+.cal-ring .ring-fg { fill: none; stroke-width: 12; stroke-linecap: round; transform: rotate(-90deg); transform-origin: 60px 60px; transition: stroke-dashoffset .5s ease; }
+.cal-ring .ring-num { fill: var(--text); font-size: 26px; font-weight: 800; text-anchor: middle; }
+.cal-ring .ring-sub { fill: var(--muted); font-size: 11px; text-anchor: middle; }
+.ring-side { display: flex; flex-direction: column; gap: 8px; }
+.ring-line { font-size: 14px; color: var(--muted); }
+.ring-line b { color: var(--text); font-size: 18px; }
+.macros { display: flex; flex-direction: column; gap: 10px; margin: 10px 0; }
+.macro-top { display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 4px; }
+.macro-track { height: 8px; background: var(--surface-2); border-radius: 999px; overflow: hidden; }
+.macro-fill { height: 100%; border-radius: 999px; transition: width .4s ease; }
+.add-food { display: flex; flex-direction: column; gap: 4px; }
+.pending-food { background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; padding: 14px; }
+.pf-note { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+.pf-macros { display: flex; flex-wrap: wrap; gap: 12px; font-size: 13px; color: var(--muted); }
+.pf-macros b { color: var(--text); }
+.food-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.food-row:last-child { border-bottom: none; }
+.food-row .meal-items { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.food-row .meal-kcal { font-weight: 700; white-space: nowrap; }
+.analyzing { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 14px; padding: 8px 0; }
+.analyzing .spin { width: 18px; height: 18px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: fj-spin .8s linear infinite; }
+@keyframes fj-spin { to { transform: rotate(360deg); } }
+
 /* full-screen access gate (sign-up wall) */
 .access-gate { position: fixed; inset: 0; background: var(--bg); z-index: 65; display: none; align-items: center; justify-content: center; padding: 24px; }
 .access-gate.show { display: flex; }

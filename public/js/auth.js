@@ -59,6 +59,7 @@ function createUser(data, provider = "email") {
     privacy: { profilePublic: true, showFav: false, trainerContact: true, shareData: true },
     notif: { offers: true, expiry: true, classes: true, news: false },
     intake: null, weights: [], reminders: { gym: { on: false, time: "19:00" }, rest: { on: false, time: "10:00" } },
+    food: { log: [] },
   };
   users.push(u); saveUsers(users); return u;
 }
@@ -82,6 +83,7 @@ function openAuth(view) {
   authView = view;
   if (view === "account") acctSection = "profile";
   if (typeof resetPlanEditing === "function") resetPlanEditing();
+  if (typeof resetNutritionEditing === "function") resetNutritionEditing();
   document.getElementById("authBack").classList.add("open");
   document.body.style.overflow = "hidden";
   renderAuthView();
@@ -178,6 +180,7 @@ function accountHTML() {
   const u = currentUser();
   const nav = [
     ["profile", "👤", t("myProfile")], ["plan", "🎯", t("myPlan")], ["progress", "📈", t("myProgress")],
+    ["nutrition", "🍎", t("calorieTracker")],
     ["security", "🔒", t("security")], ["email", "✉️", t("changeEmail")],
     ["privacy", "🛡️", t("privacy")], ["notifications", "🔔", t("notifications")],
     ["preferences", "⚙️", t("preferences")], ["danger", "⚠️", t("dangerZone")],
@@ -211,6 +214,7 @@ function sectionHTML(sec) {
   const u = currentUser();
   if (sec === "profile") return secProfile(u);
   if (sec === "plan" && typeof secPlan === "function") return secPlan(u);
+  if (sec === "nutrition" && typeof secNutrition === "function") return secNutrition(u);
   if (sec === "progress") return secProgress(u);
   if (sec === "security") return secSecurity(u);
   if (sec === "email") return secEmail(u);
@@ -547,6 +551,7 @@ function setPref(kind, value) {
 function onAuthClick(e) {
   const hit = (s) => e.target.closest(s);
   if (typeof handlePlanClick === "function" && handlePlanClick(e)) return;
+  if (typeof handleNutritionClick === "function" && handleNutritionClick(e)) return;
   if (hit("#authX")) return closeAuth();
   if (hit("#toSignUp")) return openAuth("signup");
   if (hit("#toSignIn")) return openAuth("signin");
@@ -578,6 +583,7 @@ function onAuthClick(e) {
 }
 function onAuthChange(e) {
   if (typeof handlePlanChange === "function" && handlePlanChange(e)) return;
+  if (typeof handleNutritionChange === "function" && handleNutritionChange(e)) return;
   const priv = e.target.dataset.priv, notif = e.target.dataset.notif;
   if (priv) { const p = { ...currentUser().privacy }; p[priv] = e.target.checked; updateUser({ privacy: p }); return toast(t("saved")); }
   if (notif) { const n = { ...currentUser().notif }; n[notif] = e.target.checked; updateUser({ notif: n }); return toast(t("saved")); }

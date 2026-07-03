@@ -32,7 +32,11 @@
       "Bash(git fetch *)",
       "Bash(git merge *)",
       "Bash(echo \"=== EXIT: $? ===\")",
-      "Bash(git rm *)"
+      "Bash(git rm *)",
+      "Bash(curl -s https://fitjo-admin-portal.netlify.app/js/auth.js?x=__TRACKED_VAR__)",
+      "Bash(curl -s https://fitjo-admin-portal.netlify.app/?x=__TRACKED_VAR__)",
+      "Bash(export MSYS_NO_PATHCONV=1)",
+      "Bash(curl -s -X POST __TRACKED_VAR__/api/gyms -H 'Content-Type: application/json' -H 'x-admin-password: wrong-xyz' --data [] -w '\\\\nHTTP %{http_code}\\\\n')"
     ]
   }
 }
