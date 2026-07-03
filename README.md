@@ -1,96 +1,107 @@
 # FitJo — Gyms of Jordan (Prototype)
 
-A clickable prototype of your gym-finder app for Amman, Jordan. This is **Phase 1**:
-the gym directory with search, filters, favorites, Arabic/English, themes and currencies.
-It uses **sample data** and needs **no installation**.
+A gym-finder web app for Amman, Jordan: browse gyms, filter, compare, favorite,
+Arabic/English, themes and currencies — plus a **cloud admin dashboard** to manage the
+gym list and a **sign-up wall with phone verification**.
 
 ---
 
-## ▶️ How to open it
+## 📂 Project layout
 
-**Easiest way:** double-click `index.html`. It opens in your web browser. That's it.
-
-**Nicer way (runs on a local address):**
-1. Right-click inside this folder → "Open in Terminal" (or open PowerShell here).
-2. Paste this and press Enter:
-   ```
-   powershell -ExecutionPolicy Bypass -File server.ps1
-   ```
-3. Open your browser to **http://localhost:8080**
-4. To stop it, press `Ctrl + C` in the terminal.
-
----
-
-## 📱 Add it to your phone like an app (no app store)
-
-1. Run `phone-preview.ps1` on your PC and open the address it shows on your phone's browser.
-2. **iPhone (Safari):** tap **Share** → **Add to Home Screen** → **Add**.
-   **Android (Chrome):** tap **⋮** menu → **Add to Home screen / Install app**.
-3. A **FitJo** icon appears on your home screen and opens full-screen like a real app.
-
-This is a *preview* app (an installable web app). A real App Store / Google Play app is a later phase.
+```
+public/            ← the website Netlify serves
+  index.html       APP page (gated behind sign-up)
+  manifest.json    installable-app settings
+  css/             styles.css        (shared theme)
+  js/              data.js (shared), app.js, auth.js, plan.js   (APP only)
+  icons/           app icons
+  admin/           ← ADMIN dashboard, self-contained (open at /admin/)
+    index.html · admin.css · admin.js
+netlify/functions/
+  gyms.mjs         cloud gym store — GET/POST /api/gyms (Netlify Blobs)
+  analyze-food.js  optional AI food-photo analyzer (dormant — see AI-SETUP.md)
+package.json       function dependencies
+netlify.toml       publishes public/ and wires up the functions
+AI-SETUP.md        how to switch on the real AI calorie analysis
+tools/             ← optional local preview only (NOT deployed)
+  server.ps1, phone-preview.ps1
+```
 
 ---
 
-## ✅ What works in this prototype
+## 🔑 Access gate — sign up + phone verification
 
-- **Gym directory** — 8 sample Amman gyms with photos (colored covers), ratings and reviews.
-- **Search** — by gym name or area.
-- **Filters** — area, facilities, pool / no pool, **open 24/7**, access (mixed / women / men), minimum age, max monthly price, and sorting. The panel **collapses** (tap "Filters") and shows a badge of how many filters are active — collapsed by default on phones so you see gyms first.
-- **Live occupancy** — each gym shows a "Right now: Quiet / Moderate / Busy" indicator that changes with the time of day.
-- **Reviews** — sample member reviews with star ratings on each gym.
-- **Class schedule** — a weekly timetable on gyms that run classes.
-- **Compare gyms** — pick up to 3 gyms and compare them side-by-side (price, pool, 24/7, rating, access, facilities).
-- **Weight & progress tracker** — in your profile: log your weight, see a chart and your start → current change.
-- **AI calorie tracker** — in your profile: snap or upload a photo of a meal and get estimated **calories, protein, carbs and fat**, tweak the portion, and **log it to your day**. A calorie ring + macro bars track the day against your plan's targets, with a short history of recent days. Works offline in **demo mode** (estimates from a built-in food library); real photo AI can be switched on later — see `AI-SETUP.md`.
-- **Personalized plan (subscription)** — fill a short form (height, weight, goal, days/week, activity, gym time, diet) and the app builds:
-  - a **goal-based workout split** with exercises, sets & reps,
-  - a **meal plan** and daily **calorie + protein/carb/fat** targets,
-  - **water intake**, **suggested supplements**, and a **weekly gym schedule** (when to train, when to rest),
-  - **gym & rest-day reminders** with times (desktop notification while the app is open).
-  Change any answer and the whole plan regenerates.
-- **Favorites** — tap the ♥ heart to save a gym; see them under the "Favorites" tab (saved in your browser).
-- **Gym details** — opening hours, women's & men's pool times, full facilities, personal trainers with per-session prices, and membership plans.
-- **Payment explainer** — the "Subscribe" button shows how the pay-us-then-we-pay-the-gym flow will work.
-- **Languages** — English + Arabic with full right-to-left layout (tap العربية / EN top-right).
-- **Themes** — light / dark toggle + accent color swatches.
-- **Currencies** — JOD, USD, EUR, SAR, KWD, QAR (prices convert live).
-- **Accounts** — sign up / sign in, "Continue with Google", and a full profile:
-  - Profile: name, **age** (required at sign-up), gender, city, fitness goal, avatar.
-  - Security: change password, **two-factor authentication** with an authenticator-app QR + recovery codes, and passkeys.
-  - Change email, **privacy settings** (public profile, who sees your gyms, trainer contact, data use).
-  - Notification preferences, theme/language/currency preferences, and delete account.
-  - Signing up is required before "Subscribe". *(Accounts are stored in your browser for the demo.)*
+You must **create an account and verify a phone number** before you can use the app.
+On first visit a full-screen wall appears:
 
-## 🚧 Shown as "coming soon" (next build phases)
+1. **Create account** — name, email, age, **phone number**, password.
+2. **Verify your phone** — a 6-digit code step. In this prototype the code is generated
+   in-app and shown on screen (**demo mode — no real SMS**, like the demo Google sign-in).
+3. Enter the code → the app unlocks. Sign out and the wall returns.
 
-Goal-based workout plans · real in-app payments & digital membership pass.
+The phone + verified flag are stored on the account (in the browser for the demo).
 
 ---
 
-## 📁 Files
+## 🌍 Deploy to Netlify (with the live admin)
 
-| File | What it is |
-|------|-----------|
-| `index.html` | The page structure. |
-| `styles.css` | All the styling and themes. |
-| `data.js` | **The content** — edit gyms, prices, hours, trainers here. |
-| `app.js` | The app logic (search, filters, favorites, translations). |
-| `auth.js` | Accounts: sign in/up, Google, profile, 2FA, privacy, settings. |
-| `plan.js` | Personalized plan: intake form, workouts, meals, water, supplements, reminders. |
-| `nutrition.js` | AI calorie tracker: food photo analysis, editable results, daily food log & targets. |
-| `netlify/functions/analyze-food.js` | Optional cloud function for **real** photo AI (see `AI-SETUP.md`). |
-| `server.ps1` | Optional tiny local server (no install needed). |
+The admin dashboard edits gyms **on the live site** and saves them to the cloud, so every
+visitor sees the change. That needs the Netlify Functions, so deploy from Git:
 
-## ✏️ Want to change a gym?
+1. **Push this project to GitHub.**
+2. In Netlify: **Add new site → Import an existing project** → pick the repo → **Deploy**.
+   (`netlify.toml` sets it up — publish `public/`, functions at `/api/gyms`.)
+3. **Set your admin password:** Netlify → **Site configuration → Environment variables** →
+   add **`ADMIN_PASSWORD`** = a value of your choice → **redeploy** (Deploys → Trigger deploy).
 
-Open `data.js`. Each gym is a block with its name, area, phone, hours, facilities,
-trainers and plans — in both English and Arabic. Edit the text and save; refresh the page.
+App is then live at `https://your-site.netlify.app`, admin at `.../admin/`.
 
 ---
 
-## Next step (Phase 2)
+## 🔐 Admin dashboard
 
-Turn this into the real product: install Node.js → build the Next.js web app + Flutter
-mobile app on a shared backend (Supabase) with real accounts, live gym data, reviews,
-and payments through a licensed Jordanian gateway. See the roadmap discussed with Claude.
+1. Open **`https://your-site.netlify.app/admin/`**.
+2. Enter your **`ADMIN_PASSWORD`**.
+3. **Add / Edit / Duplicate / Delete** any gym — saved to the cloud and shown to everyone.
+   Every field is bilingual (EN/AR): name, area, address, phone/WhatsApp, rating, access,
+   min age, pool + schedule, hours, facilities, trainers, plans, offers.
+
+The green **“Connected to cloud”** badge means saving works. **Download backup** saves the
+current list as a `data.js` block. The list in `public/js/data.js` is a **fallback** shown
+before the cloud loads; once you save from the admin, the cloud copy is what visitors see.
+
+---
+
+## ✅ What works
+
+- **Gym directory, search, filters, live occupancy, reviews, class schedule, compare**.
+- **Favorites**, full **gym details** (hours, pool times, trainers, plans), payment explainer.
+- **Accounts** — sign up / sign in, "Continue with Google" (demo), profile, security (demo 2FA),
+  privacy, notifications, preferences. **Sign-up + phone verification is required to enter.**
+- **Weight & progress tracker**.
+- **Languages** (EN/AR with RTL), **themes** (light/dark + accents), **currencies** (JOD/USD/EUR/SAR/KWD/QAR).
+- **Cloud admin dashboard** for managing gyms.
+
+## 🍎 Optional: real AI calorie analysis
+
+`netlify/functions/analyze-food.js` is a ready backend that sends a food photo to Claude and
+returns estimated calories/macros. It is **dormant** — its frontend isn't wired into the
+current `public/` app yet. To enable the backend and learn how it works, see **`AI-SETUP.md`**
+(needs an `ANTHROPIC_API_KEY` in Netlify).
+
+---
+
+## ▶️ Run locally (preview only)
+
+Double-click `public/index.html`, or serve it:
+```
+powershell -ExecutionPolicy Bypass -File tools/server.ps1
+```
+then open **http://localhost:8080**. Note: the cloud admin only saves on the deployed Netlify
+site (the local server has no `/api/gyms` function).
+
+## ✏️ Change a gym by hand
+
+Edit `public/js/data.js` (the fallback list) and keep the
+`/* FITJO-GYMS-START */` … `/* FITJO-GYMS-END */` markers. On the live site, anything saved
+through the admin (the cloud copy) takes precedence until you overwrite it there.
