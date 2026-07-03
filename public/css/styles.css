@@ -301,6 +301,21 @@ img { max-width: 100%; }
 .form-err.show { display: block; }
 .note { background: var(--surface-2); border: 1px dashed var(--border); border-radius: 10px; padding: 10px 12px; font-size: 12px; color: var(--muted); margin-top: 14px; }
 
+/* simulated-code box on the verify step */
+.demo-code { background: var(--surface-2); border: 1px dashed var(--border); border-radius: 12px; padding: 12px; font-size: 13px; color: var(--muted); text-align: center; margin-bottom: 14px; }
+.demo-code b { display: inline-block; margin-top: 4px; font-size: 24px; letter-spacing: 5px; color: var(--text); }
+
+/* full-screen access gate (sign-up wall) */
+.access-gate { position: fixed; inset: 0; background: var(--bg); z-index: 65; display: none; align-items: center; justify-content: center; padding: 24px; }
+.access-gate.show { display: flex; }
+.access-gate .ag-card { max-width: 400px; width: 100%; text-align: center; }
+.access-gate .ag-logo { font-size: 54px; line-height: 1; }
+.access-gate h1 { font-size: 26px; margin: 12px 0 8px; }
+.access-gate p { color: var(--muted); margin-bottom: 22px; line-height: 1.55; }
+.access-gate .ag-actions { display: flex; flex-direction: column; gap: 10px; }
+.access-gate .ag-actions .btn { margin-top: 0; }
+.access-gate .ag-feat { margin-top: 20px; color: var(--muted); font-size: 12.5px; }
+
 /* account layout: sidebar + content */
 .acct { display: grid; grid-template-columns: 210px 1fr; min-height: 460px; }
 @media (max-width: 640px) { .acct { grid-template-columns: 1fr; } }

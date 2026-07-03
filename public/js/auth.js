@@ -9,9 +9,11 @@
    renderResults, renderAll, CURRENCIES.
    ============================================================= */
 
-let authView = null;          // "signin" | "signup" | "account"
+let authView = null;          // "signin" | "signup" | "verify" | "account"
 let acctSection = "profile";
 let tempSecret = null;
+let pendingVerify = null;      // { mode:"signup"|"signin", name?, email, age?, pw?, phone }
+let pendingCode = null;        // the current 6-digit demo code
 
 /* ---------- storage ---------- */
 const getUsers  = () => JSON.parse(localStorage.getItem("fj_users") || "[]");
@@ -28,6 +30,10 @@ const validEmail = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
 const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const initials = (name) => name.trim().split(/\s+/).slice(0, 2).map(w => (w[0] || "").toUpperCase()).join("") || "?";
 const fmtDate = (ts) => new Date(ts).toLocaleDateString(state.lang === "ar" ? "ar-JO" : "en-US", { year: "numeric", month: "short" });
+const tL = (en, ar) => (state.lang === "ar" ? ar : en);                 // inline bilingual string
+const genCode = () => String(Math.floor(100000 + Math.random() * 900000));  // 6-digit demo code
+const validPhone = (p) => p.replace(/\D/g, "").length >= 7;
+const isVerifiedUser = () => { const u = currentUser(); return !!(u && u.phoneVerified); };
 
 function toast(msg) {
   const el = document.getElementById("toast");
@@ -47,6 +53,7 @@ function createUser(data, provider = "email") {
   const users = getUsers();
   const u = {
     id: "u" + Date.now(), name: data.name, email: data.email, pw: obf(data.pw || Math.random().toString(36)),
+    phone: data.phone || "", phoneVerified: !!data.phoneVerified,
     age: data.age || 18, gender: "na", goal: "fit", city: "", createdAt: Date.now(),
     twoFA: false, twoFASecret: null, recovery: [], passkeys: 0, provider,
     privacy: { profilePublic: true, showFav: false, trainerContact: true, shareData: true },
@@ -90,7 +97,34 @@ function requireAuth() {
 function renderAuthView() {
   const modal = document.getElementById("authModal");
   if (authView === "account") { modal.className = "auth-modal wide"; modal.innerHTML = accountHTML(); }
+  else if (authView === "verify") { modal.className = "auth-modal"; modal.innerHTML = verifyHTML(); }
   else { modal.className = "auth-modal"; modal.innerHTML = authView === "signup" ? signupHTML() : signinHTML(); }
+}
+
+/* ---------- phone verification (simulated: no real SMS) ---------- */
+function verifyHTML() {
+  const p = pendingVerify || {};
+  const needPhone = !p.phone;
+  return `
+  <button class="auth-x" id="authX">✕</button>
+  <div class="auth-title">${tL("Verify your phone", "تأكيد رقم هاتفك")}</div>
+  <div class="auth-sub">FitJo · ${t("brandTag")}</div>
+  <div class="form-err" id="authErr"></div>
+  ${needPhone ? `
+    <p style="color:var(--muted);font-size:14px;margin-bottom:14px">${tL("Add your phone number — we'll send a verification code.", "أضف رقم هاتفك — سنرسل رمز تحقّق.")}</p>
+    <div class="form-row"><label>${tL("Phone number", "رقم الهاتف")}</label><input id="inPhone" type="tel" autocomplete="tel" placeholder="+962 7X XXX XXXX"></div>
+    <button class="btn block" id="sendCode">${tL("Send code", "إرسال الرمز")}</button>
+  ` : `
+    <p style="color:var(--muted);font-size:14px;margin-bottom:12px">${tL("Enter the 6-digit code we sent to", "أدخل الرمز المكوّن من 6 أرقام المُرسل إلى")} <b dir="ltr">${esc(p.phone)}</b>.</p>
+    <div class="demo-code">${tL("Demo — no real SMS is sent. Your code is:", "تجريبي — لا تُرسل رسالة فعلية. رمزك هو:")}<br><b>${esc(pendingCode)}</b></div>
+    <div class="form-row"><label>${tL("Verification code", "رمز التحقق")}</label><input id="inCode" inputmode="numeric" maxlength="6" placeholder="123456" autocomplete="one-time-code"></div>
+    <button class="btn block" id="verifyPhone">${tL("Verify & continue", "تأكيد ومتابعة")}</button>
+    <div class="auth-foot" style="display:flex;gap:16px;justify-content:center">
+      <button class="auth-link" id="resendCode">${tL("Resend code", "إعادة إرسال")}</button>
+      <button class="auth-link" id="changeNumber">${tL("Change number", "تغيير الرقم")}</button>
+    </div>
+  `}
+  <div class="note">${t("demoNote")}</div>`;
 }
 
 /* ---------- Google icon ---------- */
@@ -127,6 +161,7 @@ function signupHTML() {
     <div class="form-row"><label>${t("email")}</label><input id="inEmail" type="email" placeholder="you@email.com"></div>
     <div class="form-row"><label>${t("age")}</label><input id="inAge" type="number" min="12" max="100" placeholder="25"></div>
   </div>
+  <div class="form-row"><label>${tL("Phone number", "رقم الهاتف")}</label><input id="inPhone" type="tel" autocomplete="tel" placeholder="+962 7X XXX XXXX"></div>
   <div class="form-two">
     <div class="form-row"><label>${t("password")}</label><input id="inPassword" type="password" placeholder="••••••••"></div>
     <div class="form-row"><label>${t("confirmPassword")}</label><input id="inConfirm" type="password" placeholder="••••••••"></div>
@@ -403,35 +438,69 @@ function disable2FA() {
 function addPasskey() { updateUser({ passkeys: currentUser().passkeys + 1 }); toast(t("saved")); reRenderSection(); }
 
 /* ---------- actions ---------- */
-function afterAuth() { closeAuth(); renderAll(); if (typeof startReminderScheduler === "function") startReminderScheduler(); const u = currentUser(); toast(`${t("hi")}, ${u.name.split(" ")[0]} 👋`); }
+function afterAuth() { closeAuth(); updateAccessGate(); renderAll(); if (typeof startReminderScheduler === "function") startReminderScheduler(); const u = currentUser(); toast(`${t("hi")}, ${u.name.split(" ")[0]} 👋`); }
 
+function startVerify(mode, data) {
+  pendingVerify = { mode, ...data };
+  pendingCode = data.phone ? genCode() : null;   // if we already have a phone, "send" a code now
+  authView = "verify";
+  renderAuthView();
+}
 function handleSignIn() {
   const email = val("inEmail").trim().toLowerCase(), pw = val("inPassword");
   if (!email || !pw) return showErr(t("fillAll"));
   const u = getUsers().find(x => x.email === email);
   if (!u || u.pw !== obf(pw)) return showErr(t("badLogin"));
+  if (!u.phoneVerified) return startVerify("signin", { email: u.email, phone: u.phone || "" });
   setSession(email); afterAuth();
 }
 function handleSignUp() {
   const name = val("inName").trim(), email = val("inEmail").trim().toLowerCase();
   const ageStr = val("inAge"), age = parseInt(ageStr, 10), pw = val("inPassword"), cf = val("inConfirm");
+  const phone = val("inPhone").trim();
   const agree = document.getElementById("agreeAge").checked;
-  if (!name || !email || !ageStr || !pw) return showErr(t("fillAll"));
+  if (!name || !email || !ageStr || !pw || !phone) return showErr(t("fillAll"));
   if (!validEmail(email)) return showErr(t("emailInvalid"));
+  if (!validPhone(phone)) return showErr(tL("Enter a valid phone number", "أدخل رقم هاتف صحيح"));
   if (!(age >= 12 && age <= 100)) return showErr(t("ageInvalid"));
   if (!agree) return showErr(t("ageInvalid"));
   if (pw.length < 6) return showErr(t("pwShort"));
   if (pw !== cf) return showErr(t("pwMismatch"));
   if (getUsers().some(x => x.email === email)) return showErr(t("emailTaken"));
-  createUser({ name, email, age, pw }); setSession(email); afterAuth();
+  startVerify("signup", { name, email, age, pw, phone });   // create the account only after the code checks out
 }
 function handleGoogle() {
   const email = "demo.user@gmail.com";
   let u = getUsers().find(x => x.email === email);
   if (!u) u = createUser({ name: "Demo User", email, age: 25 }, "google");
+  if (!u.phoneVerified) return startVerify("signin", { email, phone: u.phone || "" });
   setSession(email); afterAuth();
 }
-function doLogout() { clearSession(); closeAuth(); renderAll(); toast(t("signOut")); }
+/* ---- verify-step actions ---- */
+function sendCode() {
+  const phone = val("inPhone").trim();
+  if (!validPhone(phone)) return showErr(tL("Enter a valid phone number", "أدخل رقم هاتف صحيح"));
+  pendingVerify.phone = phone;
+  pendingCode = genCode();
+  renderAuthView();
+}
+function resendCode() { pendingCode = genCode(); renderAuthView(); toast(tL("Code resent", "تم إعادة إرسال الرمز")); }
+function changeNumber() { pendingVerify.phone = ""; pendingCode = null; renderAuthView(); }
+function handleVerifyPhone() {
+  const code = val("inCode").trim();
+  if (!/^\d{6}$/.test(code) || code !== pendingCode) return showErr(tL("Wrong code — check and try again", "رمز خاطئ — تحقق وحاول مجدداً"));
+  const p = pendingVerify;
+  if (p.mode === "signup") {
+    createUser({ name: p.name, email: p.email, age: p.age, pw: p.pw, phone: p.phone, phoneVerified: true });
+    setSession(p.email);
+  } else {
+    setSession(p.email);
+    updateUser({ phone: p.phone, phoneVerified: true });
+  }
+  pendingVerify = null; pendingCode = null;
+  afterAuth();
+}
+function doLogout() { clearSession(); closeAuth(); renderAll(); updateAccessGate(); toast(t("signOut")); }
 
 function saveProfile() {
   const name = val("pfName").trim(), age = parseInt(val("pfAge"), 10);
@@ -463,7 +532,7 @@ function askDelete() {
 }
 function doDelete() {
   saveUsers(getUsers().filter(x => x.email !== getSession()));
-  clearSession(); closeAuth(); renderAll(); toast(t("deleteAccount"));
+  clearSession(); closeAuth(); renderAll(); updateAccessGate(); toast(t("deleteAccount"));
 }
 function setPref(kind, value) {
   if (kind === "theme") state.theme = value;
@@ -484,6 +553,10 @@ function onAuthClick(e) {
   if (hit("#googleBtn")) return handleGoogle();
   if (hit("#doSignIn")) return handleSignIn();
   if (hit("#doSignUp")) return handleSignUp();
+  if (hit("#sendCode")) return sendCode();
+  if (hit("#verifyPhone")) return handleVerifyPhone();
+  if (hit("#resendCode")) return resendCode();
+  if (hit("#changeNumber")) return changeNumber();
   if (hit("#forgotPw")) return toast(state.lang === "ar" ? "إعادة تعيين كلمة المرور تأتي مع الخادم (المرحلة 2)" : "Password reset arrives with the backend (Phase 2)");
   if (hit("#signOutBtn")) return doLogout();
   const sec = hit("[data-sec]"); if (sec) return switchSection(sec.dataset.sec);
@@ -511,6 +584,27 @@ function onAuthChange(e) {
   if (e.target.id === "prefCurrency") { state.currency = e.target.value; persist(); renderAll(); return reRenderSection(); }
 }
 
+/* ---------- access gate: must be signed in + phone-verified to use the app ---------- */
+function updateAccessGate() {
+  const gate = document.getElementById("accessGate");
+  if (!gate) return;
+  if (isVerifiedUser()) { gate.classList.remove("show"); gate.innerHTML = ""; document.body.style.overflow = ""; return; }
+  gate.innerHTML = `
+    <div class="ag-card">
+      <div class="ag-logo">🏋️</div>
+      <h1>${tL("Welcome to FitJo", "أهلاً بك في FitJo")}</h1>
+      <p>${tL("Create your account and verify your phone number to browse gyms in Amman.", "أنشئ حسابك وأكّد رقم هاتفك لتصفّح أندية عمّان.")}</p>
+      <div class="ag-actions">
+        <button class="btn block" id="gateSignUp">${t("signUp")}</button>
+        <button class="btn ghost block" id="gateSignIn">${t("signIn")}</button>
+      </div>
+      <div class="ag-feat">${tL("🔒 Secure", "🔒 آمن")} · ${tL("📱 Phone verified", "📱 هاتف موثّق")} · ${tL("🇯🇴 Amman gyms", "🇯🇴 أندية عمّان")}</div>
+    </div>`;
+  gate.classList.add("show");
+  document.getElementById("gateSignUp").onclick = () => openAuth("signup");
+  document.getElementById("gateSignIn").onclick = () => openAuth("signin");
+}
+
 /* ---------- boot ---------- */
 document.addEventListener("DOMContentLoaded", () => {
   const back = document.getElementById("authBack");
@@ -520,4 +614,6 @@ document.addEventListener("DOMContentLoaded", () => {
   modal.addEventListener("change", onAuthChange);
   document.addEventListener("keydown", (e) => { if (e.key === "Escape" && back.classList.contains("open")) closeAuth(); });
   renderAuthButton();
+  updateAccessGate();
+  if (!isVerifiedUser()) openAuth("signup");   // force sign-up on first visit
 });

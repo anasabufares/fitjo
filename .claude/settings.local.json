@@ -20,7 +20,15 @@
       "Bash(git add *)",
       "Bash(git commit -q -m ' *)",
       "mcp__claude-in-chrome__list_connected_browsers",
-      "mcp__claude-in-chrome__tabs_context_mcp"
+      "mcp__claude-in-chrome__tabs_context_mcp",
+      "Bash(git remote *)",
+      "Bash(git push *)",
+      "Bash(git ls-remote *)",
+      "Bash(git ls-tree *)",
+      "Bash(curl -s -o /dev/null -w 'HTTP %{http_code}  \\(%{content_type}\\)\\\\n' https://fitjo-admin-portal.netlify.app/)",
+      "Bash(curl -s -o /dev/null -w 'HTTP %{http_code}  \\(%{content_type}\\)\\\\n' https://fitjo-admin-portal.netlify.app/admin/)",
+      "Bash(curl -s -w '\\\\nHTTP %{http_code}  \\(%{content_type}\\)\\\\n' https://fitjo-admin-portal.netlify.app/api/gyms)",
+      "Bash(curl -s -X POST https://fitjo-admin-portal.netlify.app/api/gyms -H 'Content-Type: application/json' -H 'x-admin-password: definitely-wrong-xyz' --data [] -w '\\\\nHTTP %{http_code}\\\\n')"
     ]
   }
 }
