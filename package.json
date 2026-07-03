@@ -4,6 +4,7 @@
   "private": true,
   "description": "FitJo — gym finder for Amman. Static site (public/) + a Netlify Function for the admin gym store.",
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.1",
     "@netlify/blobs": "^8.1.0"
   }
 }
