@@ -17,6 +17,7 @@ let cloudOnline = false;    // is the Netlify function reachable?
 let adminPw = sessionStorage.getItem("fj_admin_pw") || "";   // the admin password (this session)
 let view = "gyms";          // "gyms" | "members"
 let members = null;         // loaded member list (null = not loaded yet)
+let memberFilter = "";      // Members search box
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
@@ -441,9 +442,14 @@ function fmtWhen(ts) {
 
 function renderMembers() {
   const list = $("#memberList");
-  const arr = (members || []).slice().sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-  $("#memberCount").textContent = `${arr.length} member${arr.length === 1 ? "" : "s"}`;
-  if (!arr.length) { list.innerHTML = `<div class="muted-note">No members yet. They appear here once someone signs up on the live app.</div>`; return; }
+  const all = (members || []);
+  const q = memberFilter.trim().toLowerCase();
+  let arr = all.slice();
+  if (q) arr = arr.filter(m => (m.name || "").toLowerCase().includes(q) || (m.email || "").toLowerCase().includes(q) || (m.phone || "").includes(memberFilter.trim()));
+  arr.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  $("#memberCount").textContent = `${arr.length} member${arr.length === 1 ? "" : "s"}${q ? ` of ${all.length}` : ""}`;
+  if (!all.length) { list.innerHTML = `<div class="muted-note">No members yet. They appear here once someone signs up on the live app.</div>`; return; }
+  if (!arr.length) { list.innerHTML = `<div class="muted-note">No members match “${escAttr(memberFilter)}”.</div>`; return; }
   list.innerHTML = arr.map(m => `
     <div class="member-row">
       <div class="member-avatar">${escAttr((m.name || m.email || "?").trim().charAt(0).toUpperCase())}</div>
@@ -453,12 +459,28 @@ function renderMembers() {
         <div class="member-meta">
           <span class="tag">📱 ${escAttr(m.phone || "—")}</span>
           <span class="tag">🎂 ${escAttr(m.age ?? "—")}</span>
+          <span class="tag">🏋️ ${escAttr(m.favorites ?? 0)} saved</span>
+          <span class="tag">${m.hasPlan ? "📋 plan ✓" : "📋 no plan"}</span>
+          ${m.goal ? `<span class="tag">🎯 ${escAttr(m.goal)}</span>` : ""}
           <span class="tag">🗓️ ${escAttr(fmtWhen(m.createdAt))}</span>
         </div>
       </div>
       <button class="abtn danger sm" data-delmember="${escAttr(m.email)}">Remove</button>
     </div>`).join("");
   $$("[data-delmember]", list).forEach(b => b.onclick = () => deleteMember(b.dataset.delmember));
+}
+
+function exportMembersCSV() {
+  const arr = members || [];
+  if (!arr.length) { toast("No members to export", true); return; }
+  const cols = ["name", "email", "phone", "age", "goal", "city", "favorites", "hasPlan", "createdAt", "lastSeen"];
+  const cell = (v) => { const s = String(v ?? ""); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+  const rows = arr.map(m => cols.map(c => (c === "createdAt" || c === "lastSeen") ? cell(m[c] ? new Date(m[c]).toISOString() : "") : cell(m[c])).join(","));
+  const csv = [cols.join(","), ...rows].join("\r\n");
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+  a.download = "fitjo-members.csv"; a.click(); URL.revokeObjectURL(a.href);
+  toast(`Exported ${arr.length} members`);
 }
 
 async function deleteMember(email) {
@@ -485,6 +507,8 @@ async function startDashboard() {
   checkCloud();
   $$(".atab").forEach(b => b.onclick = () => switchView(b.dataset.view));
   const rmb = $("#refreshMembers"); if (rmb) rmb.onclick = () => { members = null; loadMembers(); };
+  const ms = $("#memberSearch"); if (ms) ms.oninput = () => { memberFilter = ms.value; if (members) renderMembers(); };
+  const ex = $("#exportMembers"); if (ex) ex.onclick = exportMembersCSV;
   $("#themeBtn").onclick = toggleTheme;
   const so = $("#signOutBtn"); if (so) so.onclick = () => relock("");
   $("#backupBtn").onclick = downloadBackup;

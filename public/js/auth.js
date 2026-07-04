@@ -454,7 +454,12 @@ function registerMember(u) {
   try {
     fetch("/api/members", {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: u.name, email: u.email, phone: u.phone || "", age: u.age, createdAt: u.createdAt }),
+      body: JSON.stringify({
+        name: u.name, email: u.email, phone: u.phone || "", age: u.age,
+        goal: u.goal || "", city: u.city || "",
+        favorites: (state.favorites || []).length, hasPlan: !!u.intake,
+        createdAt: u.createdAt,
+      }),
     }).catch(() => {});
   } catch (e) {}
 }

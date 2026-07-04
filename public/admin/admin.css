@@ -104,6 +104,11 @@
 .member-info .sub { color: var(--muted); font-size: 13px; margin-top: 1px; word-break: break-all; }
 .member-meta { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
 .muted-note { color: var(--muted); padding: 24px; text-align: center; font-size: 14px; }
+.member-search {
+  border: 1px solid var(--border); background: var(--surface-2); color: var(--text);
+  border-radius: 10px; padding: 7px 11px; font-size: 13px; min-width: 200px; font-family: inherit;
+}
+@media (max-width: 560px) { .member-search { min-width: 0; flex: 1; } }
 
 /* ---- Editor modal ---- */
 .ed-back {
