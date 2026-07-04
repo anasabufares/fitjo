@@ -60,6 +60,7 @@ function createUser(data, provider = "email") {
     notif: { offers: true, expiry: true, classes: true, news: false },
     intake: null, weights: [], reminders: { gym: { on: false, time: "19:00" }, rest: { on: false, time: "10:00" } },
     food: { log: [] },
+    subscription: null, points: 0, checkins: [], rewards: [],
   };
   users.push(u); saveUsers(users); return u;
 }
@@ -185,7 +186,8 @@ function signupHTML() {
 function accountHTML() {
   const u = currentUser();
   const nav = [
-    ["profile", "👤", t("myProfile")], ["plan", "🎯", t("myPlan")], ["progress", "📈", t("myProgress")],
+    ["profile", "👤", t("myProfile")], ["membership", "🎟️", tL("Membership", "العضوية")],
+    ["plan", "🎯", t("myPlan")], ["progress", "📈", t("myProgress")],
     ["nutrition", "🍎", t("calorieTracker")],
     ["security", "🔒", t("security")], ["email", "✉️", t("changeEmail")],
     ["privacy", "🛡️", t("privacy")], ["notifications", "🔔", t("notifications")],
@@ -219,6 +221,7 @@ function reRenderSection() { document.getElementById("acctBody").innerHTML = sec
 function sectionHTML(sec) {
   const u = currentUser();
   if (sec === "profile") return secProfile(u);
+  if (sec === "membership" && typeof secMembership === "function") return secMembership(u);
   if (sec === "plan" && typeof secPlan === "function") return secPlan(u);
   if (sec === "nutrition" && typeof secNutrition === "function") return secNutrition(u);
   if (sec === "progress") return secProgress(u);
@@ -461,6 +464,8 @@ function registerMember(u) {
         goal: u.goal || "", city: u.city || "",
         favorites: favIds.length, favoriteIds: favIds, hasPlan: !!u.intake,
         weights: { count: w.length, start: w.length ? w[0].kg : null, current: w.length ? w[w.length - 1].kg : null },
+        subscription: u.subscription ? { gymId: u.subscription.gymId, months: u.subscription.months, expiresAt: u.subscription.expiresAt } : null,
+        points: u.points || 0, checkins: (u.checkins || []).length,
         createdAt: u.createdAt,
       }),
     }).catch(() => {});
@@ -575,6 +580,7 @@ function setPref(kind, value) {
 function onAuthClick(e) {
   const hit = (s) => e.target.closest(s);
   if (typeof handlePlanClick === "function" && handlePlanClick(e)) return;
+  if (typeof handleMembershipClick === "function" && handleMembershipClick(e)) return;
   if (typeof handleNutritionClick === "function" && handleNutritionClick(e)) return;
   if (hit("#authX")) return closeAuth();
   if (hit("#toSignUp")) return openAuth("signup");
@@ -607,6 +613,7 @@ function onAuthClick(e) {
 }
 function onAuthChange(e) {
   if (typeof handlePlanChange === "function" && handlePlanChange(e)) return;
+  if (typeof handleMembershipChange === "function" && handleMembershipChange(e)) return;
   if (typeof handleNutritionChange === "function" && handleNutritionChange(e)) return;
   const priv = e.target.dataset.priv, notif = e.target.dataset.notif;
   if (priv) { const p = { ...currentUser().privacy }; p[priv] = e.target.checked; updateUser({ privacy: p }); return toast(t("saved")); }

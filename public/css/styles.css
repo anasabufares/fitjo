@@ -332,6 +332,23 @@ img { max-width: 100%; }
 .analyzing .spin { width: 18px; height: 18px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: fj-spin .8s linear infinite; }
 @keyframes fj-spin { to { transform: rotate(360deg); } }
 
+/* ---- membership & points ---- */
+.mem-card { background: var(--surface-2); border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin-bottom: 14px; }
+.mem-gym { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.mem-gym .gym-swatch, .mem-badge .gym-swatch { width: 44px; height: 44px; border-radius: 12px; display: block; }
+.mem-gymname { font-weight: 800; font-size: 16px; }
+.pts-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.pts-num { font-size: 40px; font-weight: 800; line-height: 1; color: var(--accent); }
+.pts-head .l { font-size: 12px; color: var(--muted); font-weight: 700; }
+.mem-actions { display: flex; flex-direction: column; gap: 8px; }
+.rewards-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 6px 0 4px; }
+@media (max-width: 480px) { .rewards-grid { grid-template-columns: 1fr; } }
+.reward { background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; padding: 12px; text-align: center; }
+.reward.locked { opacity: .6; }
+.reward .rw-ic { font-size: 26px; }
+.reward .rw-name { font-size: 13px; font-weight: 700; margin: 6px 0 8px; min-height: 32px; }
+.reward .btn { width: 100%; padding: 8px; font-size: 13px; }
+
 /* full-screen access gate (sign-up wall) */
 .access-gate { position: fixed; inset: 0; background: var(--bg); z-index: 65; display: none; align-items: center; justify-content: center; padding: 24px; }
 .access-gate.show { display: flex; }

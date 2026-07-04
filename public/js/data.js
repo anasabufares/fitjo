@@ -13,6 +13,12 @@ const CURRENCIES = {
   SAR: { rate: 5.29,   symbol: "SAR", en: "Saudi Riyal",     ar: "ريال سعودي" },
   KWD: { rate: 0.434,  symbol: "KWD", en: "Kuwaiti Dinar",   ar: "دينار كويتي" },
   QAR: { rate: 5.14,   symbol: "QAR", en: "Qatari Riyal",    ar: "ريال قطري" },
+  AED: { rate: 5.18,   symbol: "AED", en: "UAE Dirham",      ar: "درهم إماراتي" },
+  GBP: { rate: 1.11,   symbol: "£",   en: "British Pound",   ar: "جنيه إسترليني" },
+  EGP: { rate: 69.0,   symbol: "E£",  en: "Egyptian Pound",  ar: "جنيه مصري" },
+  TRY: { rate: 45.0,   symbol: "₺",   en: "Turkish Lira",    ar: "ليرة تركية" },
+  CAD: { rate: 1.93,   symbol: "C$",  en: "Canadian Dollar", ar: "دولار كندي" },
+  AUD: { rate: 2.13,   symbol: "A$",  en: "Australian Dollar", ar: "دولار أسترالي" },
 };
 
 /* ---- Facilities catalogue (used by filters + cards) ---- */
@@ -957,6 +963,15 @@ Object.assign(I18N.ar, AUTH_I18N.ar);
 
 /* ---- Which gyms are open 24/7 (admin stores this per gym; this is a fallback) ---- */
 GYMS.forEach(g => { if (typeof g.open247 !== "boolean") g.open247 = (g.id === "g3" || g.id === "g7"); });
+
+/* ---- Approx gym coordinates by area (used for location check-in / points) ---- */
+const AREA_COORDS = {
+  "Abdoun": { lat: 31.9454, lng: 35.8875 }, "Sweifieh": { lat: 31.9515, lng: 35.8686 },
+  "Shmeisani": { lat: 31.9662, lng: 35.9032 }, "Khalda": { lat: 31.9960, lng: 35.8300 },
+  "Tla' Al Ali": { lat: 31.9880, lng: 35.8560 }, "Dabouq": { lat: 32.0180, lng: 35.8000 },
+  "Jabal Amman": { lat: 31.9515, lng: 35.9239 }, "Marj Al Hamam": { lat: 31.9010, lng: 35.8360 },
+};
+GYMS.forEach(g => { if (!g.coords && g.area && AREA_COORDS[g.area.en]) g.coords = AREA_COORDS[g.area.en]; });
 
 /* ---- Shared sample reviews (shown 3 per gym) ---- */
 const REVIEWS = [

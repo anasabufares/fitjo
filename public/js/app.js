@@ -543,7 +543,10 @@ function openPayModal() {
       <div class="step"><span class="n">1</span><span>${t("payBody").split(".")[0]}.</span></div>
       <div class="step"><span class="n">2</span><span>${t("payBody").split(".")[1] || ""}.</span></div>
       <div class="step"><span class="n">3</span><span>${t("payBody").split(".")[2] || ""}.</span></div>
-    </div>`;
+    </div>
+    <button class="btn block" id="startSubFromPay" style="margin-top:14px">${state.lang === "ar" ? "ابدأ العضوية واجمع النقاط" : "Start membership & earn points"}</button>`;
+  const sb = $("#startSubFromPay");
+  if (sb) sb.onclick = () => { closePayModal(); if (typeof goSubscribe === "function") goSubscribe(state.currentGym ? state.currentGym.id : null); };
   $("#modalClose").textContent = t("close");
   $("#modalBack").classList.add("open");
 }

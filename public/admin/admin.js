@@ -498,6 +498,9 @@ function openMemberDetail(email) {
   const gymName = (id) => { const g = gyms.find(x => x.id === id); return g ? (g.name?.en || id) : id; };
   const favs = m.favoriteIds || [];
   const w = m.weights || {};
+  const sub = m.subscription;
+  const subGym = sub ? gymName(sub.gymId) : null;
+  const subDays = sub ? Math.max(0, Math.ceil((sub.expiresAt - Date.now()) / 86400000)) : 0;
   const row = (label, value) => `<div class="md-cell"><span>${label}</span><b>${escAttr(value)}</b></div>`;
   $("#memberTitle").textContent = m.name || m.email;
   $("#memberBody").innerHTML = `
@@ -508,9 +511,14 @@ function openMemberDetail(email) {
       ${row("Goal", m.goal || "—")}
       ${row("City", m.city || "—")}
       ${row("Has plan", m.hasPlan ? "Yes" : "No")}
+      ${row("Points", m.points ?? 0)}
+      ${row("Check-ins", m.checkins ?? 0)}
       ${row("Joined", fmtWhen(m.createdAt))}
       ${row("Last seen", fmtWhen(m.lastSeen))}
     </div>
+    <div class="ed-section">Subscription</div>
+    ${sub ? `<div class="md-grid">${row("Gym", subGym)}${row("Plan", sub.months + " mo")}${row("Days left", subDays)}${row("Expires", fmtWhen(sub.expiresAt))}</div>`
+      : `<div class="muted-note" style="padding:10px">Not subscribed.</div>`}
     <div class="ed-section">Saved gyms (${favs.length})</div>
     ${favs.length ? `<div class="md-tags">${favs.map(id => `<span class="tag">${escAttr(gymName(id))}</span>`).join("")}</div>` : `<div class="muted-note" style="padding:10px">None saved.</div>`}
     <div class="ed-section">Weight</div>

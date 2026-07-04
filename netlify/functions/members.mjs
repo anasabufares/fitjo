@@ -53,6 +53,7 @@ export default async (req) => {
     goal: body.goal || "", city: body.city || "",
     favorites: body.favorites ?? 0, favoriteIds: Array.isArray(body.favoriteIds) ? body.favoriteIds : [],
     hasPlan: !!body.hasPlan, weights: body.weights || null,
+    subscription: body.subscription || null, points: body.points ?? 0, checkins: body.checkins ?? 0,
     createdAt: body.createdAt || Date.now(),
     lastSeen: Date.now(),
   };
