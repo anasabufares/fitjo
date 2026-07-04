@@ -172,6 +172,7 @@ function signinHTML() {
   <div class="auth-sub">FitJo · ${t("brandTag")}</div>
   <div class="form-err" id="authErr"></div>
   ${roleSeg}
+  ${(() => { const lu = getLastUser(); return lu ? `<button class="btn ghost block" id="bioSignIn" style="margin-bottom:12px">👆 ${tL("Sign in as", "الدخول باسم")} ${esc((lu.name || lu.email).split(" ")[0])} ${tL("with biometrics", "بالبصمة")}</button>` : ""; })()}
   <button class="google-btn" id="googleBtn">${googleG()} ${t("continueGoogle")}</button>
   <div class="divider">${t("orEmail")}</div>
   <div class="form-row"><label>${t("email")}</label><input id="inEmail" type="email" autocomplete="email" placeholder="you@email.com"></div>
@@ -212,7 +213,7 @@ function accountHTML() {
   const nav = [
     ["profile", "👤", t("myProfile")], ["membership", "🎟️", tL("Membership", "العضوية")],
     ["plan", "🎯", t("myPlan")], ["progress", "📈", t("myProgress")],
-    ["nutrition", "🍎", t("calorieTracker")],
+    ["nutrition", "🍎", t("calorieTracker")], ["supplements", "💊", tL("Supplements", "المكملات")],
     ["security", "🔒", t("security")], ["email", "✉️", t("changeEmail")],
     ["privacy", "🛡️", t("privacy")], ["notifications", "🔔", t("notifications")],
     ["preferences", "⚙️", t("preferences")], ["danger", "⚠️", t("dangerZone")],
@@ -248,6 +249,7 @@ function sectionHTML(sec) {
   if (sec === "membership" && typeof secMembership === "function") return secMembership(u);
   if (sec === "plan" && typeof secPlan === "function") return secPlan(u);
   if (sec === "nutrition" && typeof secNutrition === "function") return secNutrition(u);
+  if (sec === "supplements" && typeof secSupplements === "function") return secSupplements(u);
   if (sec === "progress") return secProgress(u);
   if (sec === "security") return secSecurity(u);
   if (sec === "email") return secEmail(u);
@@ -318,20 +320,20 @@ function secProgress(u) {
   <div class="h-sub">${t("weightTracker")}${u.goal ? " · " + goalLabel(u.goal) : ""}</div>
   ${entries.length ? `
     <div class="stat-row">
-      <div class="stat"><div class="n">${start}<small> kg</small></div><div class="l">${t("startWeight")}</div></div>
-      <div class="stat"><div class="n">${cur}<small> kg</small></div><div class="l">${t("currentWeight")}</div></div>
-      <div class="stat"><div class="n" style="color:${diff < 0 ? "#16a34a" : diff > 0 ? "#dc2626" : "var(--text)"}">${diff > 0 ? "+" : ""}${diff.toFixed(1)}</div><div class="l">${t("change")}</div></div>
+      <div class="stat"><div class="n">${wDisplay(start)}<small> ${wLabel()}</small></div><div class="l">${t("startWeight")}</div></div>
+      <div class="stat"><div class="n">${wDisplay(cur)}<small> ${wLabel()}</small></div><div class="l">${t("currentWeight")}</div></div>
+      <div class="stat"><div class="n" style="color:${diff < 0 ? "#16a34a" : diff > 0 ? "#dc2626" : "var(--text)"}">${diff > 0 ? "+" : ""}${wDisplay(diff)}</div><div class="l">${t("change")} (${wLabel()})</div></div>
     </div>
     ${weightChart(entries)}
-    <div class="wlist">${entries.slice().reverse().map(e => `<div class="w-entry"><span>${fmtDate(e.date)}</span><span><b>${e.kg}</b> kg <button class="auth-link" data-delw="${e.date}" style="margin-inline-start:8px">✕</button></span></div>`).join("")}</div>
+    <div class="wlist">${entries.slice().reverse().map(e => `<div class="w-entry"><span>${fmtDate(e.date)}</span><span><b>${wDisplay(e.kg)}</b> ${wLabel()} <button class="auth-link" data-delw="${e.date}" style="margin-inline-start:8px">✕</button></span></div>`).join("")}</div>
   ` : `<div class="note">${t("noWeights")}</div>`}
   <div class="form-two" style="margin-top:14px;align-items:end">
-    <div class="form-row" style="margin:0"><label>${t("weightKg")}</label><input id="wKg" type="number" step="0.1" min="20" max="400" placeholder="72.5"></div>
+    <div class="form-row" style="margin:0"><label>${tL("Weight", "الوزن")} (${wLabel()})</label><input id="wKg" type="number" step="0.1" placeholder="${state.unit === "lbs" ? "160" : "72.5"}"></div>
     <button class="btn" id="addWeight">${t("addWeight")}</button>
   </div>`;
 }
 function addWeight() {
-  const kg = parseFloat(val("wKg"));
+  const kg = wToKg(val("wKg"));
   if (!(kg >= 20 && kg <= 400)) return toast(t("weightKg"));
   const weights = (currentUser().weights || []).slice();
   weights.push({ date: Date.now(), kg: Math.round(kg * 10) / 10 });
@@ -407,7 +409,12 @@ function secPrefs() {
       <button data-pref-lang="ar" class="${state.lang === "ar" ? "active" : ""}">العربية</button>
     </div></div>
   <div class="form-row"><label>${t("currency")}</label>
-    <select id="prefCurrency">${Object.keys(CURRENCIES).map(k => `<option value="${k}"${state.currency === k ? " selected" : ""}>${k} — ${CURRENCIES[k][state.lang]}</option>`).join("")}</select></div>`;
+    <select id="prefCurrency">${Object.keys(CURRENCIES).map(k => `<option value="${k}"${state.currency === k ? " selected" : ""}>${k} — ${CURRENCIES[k][state.lang]}</option>`).join("")}</select></div>
+  <div class="form-row"><label>${tL("Weight unit", "وحدة الوزن")}</label>
+    <div class="seg">
+      <button data-pref-unit="kg" class="${state.unit === "kg" ? "active" : ""}">${tL("Kilograms (kg)", "كيلوغرام")}</button>
+      <button data-pref-unit="lbs" class="${state.unit === "lbs" ? "active" : ""}">${tL("Pounds (lbs)", "باوند")}</button>
+    </div></div>`;
 }
 function secDanger() {
   return `<h3 style="color:#ef4444">${t("dangerZone")}</h3><div class="h-sub">${t("deleteWarn")}</div>
@@ -496,7 +503,26 @@ function registerMember(u) {
     }).catch(() => {});
   } catch (e) {}
 }
-function afterAuth() { closeAuth(); updateAccessGate(); renderAll(); if (typeof startReminderScheduler === "function") startReminderScheduler(); const u = currentUser(); registerMember(u); toast(`${t("hi")}, ${u.name.split(" ")[0]} 👋`); }
+/* ---- Saved user + biometric (demo) sign-in ---- */
+const getLastUser = () => { try { return JSON.parse(localStorage.getItem("fj_lastUser") || "null"); } catch (e) { return null; } };
+function biometricSignIn() {
+  const lu = getLastUser();
+  if (!lu) return;
+  const u = getUsers().find(x => x.email === lu.email);
+  if (!u) { localStorage.removeItem("fj_lastUser"); return showErr(tL("Saved account not found — sign in with your password.", "الحساب المحفوظ غير موجود.")); }
+  toast(tL("Verifying biometrics…", "جارٍ التحقق بالبصمة…"));
+  const finish = () => { setSession(u.email); if (!u.phoneVerified) return startVerify("signin", { email: u.email, phone: u.phone || "" }); afterAuth(); };
+  setTimeout(finish, 650);   // simulated Face/Touch ID prompt
+}
+
+function afterAuth() {
+  closeAuth(); updateAccessGate(); renderAll();
+  if (typeof startReminderScheduler === "function") startReminderScheduler();
+  const u = currentUser();
+  registerMember(u);
+  try { localStorage.setItem("fj_lastUser", JSON.stringify({ email: u.email, name: u.name })); } catch (e) {}
+  toast(`${t("hi")}, ${u.name.split(" ")[0]} 👋`);
+}
 
 function startVerify(mode, data) {
   pendingVerify = { mode, ...data };
@@ -618,6 +644,7 @@ function onAuthClick(e) {
   const hit = (s) => e.target.closest(s);
   if (typeof handlePlanClick === "function" && handlePlanClick(e)) return;
   if (typeof handleMembershipClick === "function" && handleMembershipClick(e)) return;
+  if (typeof handleSupplementsClick === "function" && handleSupplementsClick(e)) return;
   if (typeof handleNutritionClick === "function" && handleNutritionClick(e)) return;
   if (hit("#authX")) return closeAuth();
   if (hit("#toSignUp")) return openAuth("signup");
@@ -625,6 +652,7 @@ function onAuthClick(e) {
   const sr = hit("[data-signrole]"); if (sr) { signRole = sr.dataset.signrole; renderAuthView(); return; }
   const st = hit("[data-staffrole]"); if (st) { staffRole = st.dataset.staffrole; renderAuthView(); return; }
   if (hit("#staffEnter")) return staffEnter();
+  if (hit("#bioSignIn")) return biometricSignIn();
   if (hit("#googleBtn")) return handleGoogle();
   if (hit("#doSignIn")) return handleSignIn();
   if (hit("#doSignUp")) return handleSignUp();
@@ -650,6 +678,7 @@ function onAuthClick(e) {
   const pt = hit("[data-pref-theme]"); if (pt) return setPref("theme", pt.dataset.prefTheme);
   const pa = hit("[data-pref-accent]"); if (pa) return setPref("accent", pa.dataset.prefAccent);
   const pl = hit("[data-pref-lang]"); if (pl) return setPref("lang", pl.dataset.prefLang);
+  const pu = hit("[data-pref-unit]"); if (pu) { state.unit = pu.dataset.prefUnit; persist(); reRenderSection(); return; }
 }
 function onAuthChange(e) {
   if (typeof handlePlanChange === "function" && handlePlanChange(e)) return;

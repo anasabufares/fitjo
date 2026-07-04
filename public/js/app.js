@@ -7,6 +7,7 @@ const state = {
   theme: localStorage.getItem("fj_theme") || "light",
   accent: localStorage.getItem("fj_accent") || "green",
   currency: localStorage.getItem("fj_cur") || "JOD",
+  unit: localStorage.getItem("fj_unit") || "kg",   // weight unit: kg | lbs
   favorites: JSON.parse(localStorage.getItem("fj_favs") || "[]"),
   tab: "all",             // all | favorites
   view: "list",           // list | detail
@@ -50,6 +51,7 @@ function persist() {
   localStorage.setItem("fj_theme", state.theme);
   localStorage.setItem("fj_accent", state.accent);
   localStorage.setItem("fj_cur", state.currency);
+  localStorage.setItem("fj_unit", state.unit);
   localStorage.setItem("fj_favs", JSON.stringify(state.favorites));
   localStorage.setItem("fj_filtersOpen", String(state.filtersOpen));
 }
@@ -88,6 +90,12 @@ function monthlyJOD(g) {
   const m = g.plans.find(p => p.months === 1);
   return m ? m.priceJOD : minPlanJOD(g);
 }
+
+/* ---------- Weight units (kg internal; display kg or lbs) ---------- */
+const KG_PER_LB = 0.45359237;
+function wLabel() { return state.unit === "lbs" ? "lbs" : "kg"; }
+function wDisplay(kg) { const v = state.unit === "lbs" ? kg / KG_PER_LB : kg; return Math.round(v * 10) / 10; }
+function wToKg(v) { const n = parseFloat(v); if (isNaN(n)) return NaN; return state.unit === "lbs" ? n * KG_PER_LB : n; }
 
 /* ---------- Filtering ---------- */
 function filteredGyms() {
