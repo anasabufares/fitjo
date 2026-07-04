@@ -349,6 +349,32 @@ img { max-width: 100%; }
 .reward .rw-name { font-size: 13px; font-weight: 700; margin: 6px 0 8px; min-height: 32px; }
 .reward .btn { width: 100%; padding: 8px; font-size: 13px; }
 
+/* ---- coach portal (gym staff) ---- */
+.coach-portal { position: fixed; inset: 0; background: var(--bg); z-index: 75; display: none; overflow-y: auto; }
+.coach-portal.show { display: block; }
+.cp-top { position: sticky; top: 0; display: flex; align-items: center; gap: 10px; padding: 12px 16px;
+  background: var(--surface); border-bottom: 1px solid var(--border); box-shadow: var(--shadow); }
+.cp-wrap { max-width: 760px; margin: 0 auto; padding: 20px 16px 60px; }
+.coach-portal .member-list { display: grid; gap: 10px; }
+.coach-portal .member-row { display: flex; align-items: center; gap: 14px; background: var(--surface);
+  border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; box-shadow: var(--shadow); }
+.coach-portal .member-avatar { width: 42px; height: 42px; border-radius: 50%; flex: none; display: grid;
+  place-items: center; background: var(--accent); color: #fff; font-weight: 800; font-size: 17px; }
+.coach-portal .member-info { flex: 1; min-width: 0; }
+.coach-portal .member-info .nm { font-weight: 800; font-size: 15px; }
+.coach-portal .member-info .sub { color: var(--muted); font-size: 13px; }
+.coach-portal .member-meta { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.coach-portal .member-row .acts { display: flex; gap: 6px; flex: none; }
+.coach-portal .abtn { border: none; border-radius: 10px; padding: 8px 12px; font-size: 12px; font-weight: 700;
+  cursor: pointer; background: var(--accent); color: #fff; }
+.coach-portal .abtn.ghost { background: var(--surface-2); color: var(--text); border: 1px solid var(--border); }
+.coach-portal .abtn.sm { padding: 6px 10px; }
+.coach-portal .tag { font-size: 11px; font-weight: 700; color: var(--muted); border: 1px solid var(--border);
+  border-radius: 999px; padding: 2px 8px; }
+.coach-portal .admin-brand { display: flex; align-items: center; gap: 10px; font-weight: 800; }
+.coach-portal .admin-brand small { display: block; font-size: 11px; font-weight: 600; color: var(--muted); }
+.coach-portal .admin-brand .logo { font-size: 22px; }
+
 /* full-screen access gate (sign-up wall) */
 .access-gate { position: fixed; inset: 0; background: var(--bg); z-index: 65; display: none; align-items: center; justify-content: center; padding: 24px; }
 .access-gate.show { display: flex; }

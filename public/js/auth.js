@@ -14,6 +14,8 @@ let acctSection = "profile";
 let tempSecret = null;
 let pendingVerify = null;      // { mode:"signup"|"signin", name?, email, age?, pw?, phone }
 let pendingCode = null;        // the current 6-digit demo code
+let signRole = "member";       // sign-in mode: "member" | "staff"
+let staffRole = "coach";       // staff sub-role: "coach" | "owner"
 
 /* ---------- storage ---------- */
 const getUsers  = () => JSON.parse(localStorage.getItem("fj_users") || "[]");
@@ -143,11 +145,33 @@ function googleG() {
 
 /* ---------- sign in / sign up ---------- */
 function signinHTML() {
+  const roleSeg = `
+    <div class="seg" style="margin-bottom:14px">
+      <button data-signrole="member" class="${signRole === "member" ? "active" : ""}">👤 ${tL("Member", "عضو")}</button>
+      <button data-signrole="staff" class="${signRole === "staff" ? "active" : ""}">🏢 ${tL("Gym staff", "طاقم النادي")}</button>
+    </div>`;
+  if (signRole === "staff") {
+    return `
+    <button class="auth-x" id="authX">✕</button>
+    <div class="auth-title">${tL("Gym staff sign in", "دخول طاقم النادي")}</div>
+    <div class="auth-sub">FitJo · ${t("brandTag")}</div>
+    <div class="form-err" id="authErr"></div>
+    ${roleSeg}
+    <div class="seg" style="margin-bottom:14px">
+      <button data-staffrole="coach" class="${staffRole === "coach" ? "active" : ""}">🧑‍🏫 ${tL("Coach", "مدرب")}</button>
+      <button data-staffrole="owner" class="${staffRole === "owner" ? "active" : ""}">🔑 ${tL("Gym owner", "مالك النادي")}</button>
+    </div>
+    <div class="form-row"><label>${tL("Staff access code", "رمز دخول الطاقم")}</label><input id="staffCode" type="password" autocomplete="off" placeholder="••••••••"></div>
+    <button class="btn block" id="staffEnter">${staffRole === "owner" ? tL("Open owner dashboard", "فتح لوحة المالك") : tL("Enter coach portal", "دخول بوابة المدرب")}</button>
+    <div class="auth-foot"><button class="auth-link" data-signrole="member">${tL("← Back to member sign in", "→ العودة لدخول الأعضاء")}</button></div>
+    <div class="note">${tL("Codes are set by the gym in Netlify (owner = ADMIN_PASSWORD, coach = COACH_PASSWORD).", "الرموز يحددها النادي في Netlify.")}</div>`;
+  }
   return `
   <button class="auth-x" id="authX">✕</button>
   <div class="auth-title">${t("welcomeBack")}</div>
   <div class="auth-sub">FitJo · ${t("brandTag")}</div>
   <div class="form-err" id="authErr"></div>
+  ${roleSeg}
   <button class="google-btn" id="googleBtn">${googleG()} ${t("continueGoogle")}</button>
   <div class="divider">${t("orEmail")}</div>
   <div class="form-row"><label>${t("email")}</label><input id="inEmail" type="email" autocomplete="email" placeholder="you@email.com"></div>
@@ -466,6 +490,7 @@ function registerMember(u) {
         weights: { count: w.length, start: w.length ? w[0].kg : null, current: w.length ? w[w.length - 1].kg : null },
         subscription: u.subscription ? { gymId: u.subscription.gymId, months: u.subscription.months, expiresAt: u.subscription.expiresAt } : null,
         points: u.points || 0, checkins: (u.checkins || []).length,
+        trainerContact: !!(u.privacy && u.privacy.trainerContact),
         createdAt: u.createdAt,
       }),
     }).catch(() => {});
@@ -533,6 +558,18 @@ function handleVerifyPhone() {
   pendingVerify = null; pendingCode = null;
   afterAuth();
 }
+function staffEnter() {
+  const code = (val("staffCode") || "").trim();
+  if (!code) return showErr(tL("Enter the staff access code", "أدخل رمز دخول الطاقم"));
+  if (staffRole === "owner") {
+    // Owner = admin dashboard. Pass the code through and open it.
+    sessionStorage.setItem("fj_admin_pw", code);
+    window.location.href = "/admin/";
+    return;
+  }
+  if (typeof enterCoachPortal === "function") enterCoachPortal(code);
+  else showErr("Coach portal unavailable");
+}
 function doLogout() { clearSession(); closeAuth(); renderAll(); updateAccessGate(); toast(t("signOut")); }
 
 function saveProfile() {
@@ -585,6 +622,9 @@ function onAuthClick(e) {
   if (hit("#authX")) return closeAuth();
   if (hit("#toSignUp")) return openAuth("signup");
   if (hit("#toSignIn")) return openAuth("signin");
+  const sr = hit("[data-signrole]"); if (sr) { signRole = sr.dataset.signrole; renderAuthView(); return; }
+  const st = hit("[data-staffrole]"); if (st) { staffRole = st.dataset.staffrole; renderAuthView(); return; }
+  if (hit("#staffEnter")) return staffEnter();
   if (hit("#googleBtn")) return handleGoogle();
   if (hit("#doSignIn")) return handleSignIn();
   if (hit("#doSignUp")) return handleSignUp();

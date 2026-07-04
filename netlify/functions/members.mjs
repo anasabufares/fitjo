@@ -23,9 +23,22 @@ export default async (req) => {
   if (req.method !== "POST") return json({ ok: false, error: "Use POST" }, 405);
   const store = getStore("fitjo");
   const pw = req.headers.get("x-admin-password");
+  const coachPw = req.headers.get("x-coach-password");
 
   let body;
   try { body = await req.json(); } catch { body = {}; }
+
+  // ---- Coach: read only members who opted in to trainer contact ----
+  if (coachPw != null && coachPw !== "") {
+    if (!process.env.COACH_PASSWORD) return json({ ok: false, error: "COACH_PASSWORD is not set in Netlify." }, 500);
+    if (coachPw !== process.env.COACH_PASSWORD) return json({ ok: false, error: "Wrong coach code." }, 401);
+    const list = (await store.get(KEY, { type: "json" })) || [];
+    const opted = list.filter(m => m.trainerContact).map(m => ({
+      name: m.name, phone: m.phone, goal: m.goal, city: m.city,
+      favorites: m.favorites, points: m.points, hasPlan: m.hasPlan,
+    }));
+    return json({ members: opted });
+  }
 
   // ---- Admin actions (password required) ----
   if (pw != null && pw !== "") {
@@ -54,6 +67,7 @@ export default async (req) => {
     favorites: body.favorites ?? 0, favoriteIds: Array.isArray(body.favoriteIds) ? body.favoriteIds : [],
     hasPlan: !!body.hasPlan, weights: body.weights || null,
     subscription: body.subscription || null, points: body.points ?? 0, checkins: body.checkins ?? 0,
+    trainerContact: !!body.trainerContact,
     createdAt: body.createdAt || Date.now(),
     lastSeen: Date.now(),
   };
