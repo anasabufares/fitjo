@@ -63,6 +63,7 @@ function createUser(data, provider = "email") {
     intake: null, weights: [], reminders: { gym: { on: false, time: "19:00" }, rest: { on: false, time: "10:00" } },
     food: { log: [] },
     subscription: null, points: 0, checkins: [], rewards: [],
+    pro: false, workout: null, inbody: null,
   };
   users.push(u); saveUsers(users); return u;
 }
@@ -212,8 +213,8 @@ function accountHTML() {
   const u = currentUser();
   const nav = [
     ["profile", "👤", t("myProfile")], ["membership", "🎟️", tL("Membership", "العضوية")],
-    ["plan", "🎯", t("myPlan")], ["progress", "📈", t("myProgress")],
-    ["nutrition", "🍎", t("calorieTracker")], ["supplements", "💊", tL("Supplements", "المكملات")],
+    ["plan", "🎯", t("myPlan")], ["workouts", "🏋️", tL("Workouts", "التمارين")], ["progress", "📈", t("myProgress")],
+    ["nutrition", "🍎", t("calorieTracker")], ["inbody", "🧬", tL("In-body", "فحص الجسم")], ["supplements", "💊", tL("Supplements", "المكملات")],
     ["security", "🔒", t("security")], ["email", "✉️", t("changeEmail")],
     ["privacy", "🛡️", t("privacy")], ["notifications", "🔔", t("notifications")],
     ["preferences", "⚙️", t("preferences")], ["danger", "⚠️", t("dangerZone")],
@@ -243,12 +244,28 @@ function switchSection(sec) {
 function reRenderSection() { document.getElementById("acctBody").innerHTML = sectionHTML(acctSection); }
 
 /* ---------- sections ---------- */
+const isPro = (u) => !!(u && u.pro);
+function proUpsell() {
+  return `<h3>⭐ ${tL("FitJo Pro", "FitJo برو")}</h3>
+    <div class="h-sub">${tL("Unlock your workout & nutrition plan for $5/month.", "افتح خطة التمارين والتغذية مقابل 5$ شهرياً.")}</div>
+    <ul class="pro-feats">
+      <li>🏋️ ${tL("Personalized plan + workout picker (full gym catalog)", "خطة مخصصة + منتقي التمارين")}</li>
+      <li>🍎 ${tL("AI calorie tracker & nutrition targets", "حاسبة السعرات وأهداف التغذية")}</li>
+      <li>🧬 ${tL("In-body scan with tailored recommendations", "فحص الجسم مع توصيات")}</li>
+      <li>💧 ${tL("Meal plan, water, supplements & reminders", "خطة وجبات وماء ومكملات وتذكيرات")}</li>
+    </ul>
+    <button class="btn block" id="goPro">${tL("Unlock Pro — $5 / month", "افتح برو — 5$ شهرياً")}</button>
+    <div class="note">${tL("Demo: no real charge. Real in-app payment arrives with the backend.", "تجريبي: لا خصم فعلي. الدفع الحقيقي يأتي مع الخادم.")}</div>`;
+}
 function sectionHTML(sec) {
   const u = currentUser();
+  if (["plan", "nutrition", "workouts", "inbody"].includes(sec) && !isPro(u)) return proUpsell();
   if (sec === "profile") return secProfile(u);
   if (sec === "membership" && typeof secMembership === "function") return secMembership(u);
   if (sec === "plan" && typeof secPlan === "function") return secPlan(u);
+  if (sec === "workouts" && typeof secWorkouts === "function") return secWorkouts(u);
   if (sec === "nutrition" && typeof secNutrition === "function") return secNutrition(u);
+  if (sec === "inbody" && typeof secInbody === "function") return secInbody(u);
   if (sec === "supplements" && typeof secSupplements === "function") return secSupplements(u);
   if (sec === "progress") return secProgress(u);
   if (sec === "security") return secSecurity(u);
@@ -643,7 +660,10 @@ function setPref(kind, value) {
 function onAuthClick(e) {
   const hit = (s) => e.target.closest(s);
   if (typeof handlePlanClick === "function" && handlePlanClick(e)) return;
+  if (hit("#goPro")) { updateUser({ pro: true }); reRenderSection(); renderAuthView(); toast(tL("FitJo Pro unlocked 🎉", "تم تفعيل برو 🎉")); return; }
   if (typeof handleMembershipClick === "function" && handleMembershipClick(e)) return;
+  if (typeof handleWorkoutsClick === "function" && handleWorkoutsClick(e)) return;
+  if (typeof handleInbodyClick === "function" && handleInbodyClick(e)) return;
   if (typeof handleSupplementsClick === "function" && handleSupplementsClick(e)) return;
   if (typeof handleNutritionClick === "function" && handleNutritionClick(e)) return;
   if (hit("#authX")) return closeAuth();
@@ -683,6 +703,7 @@ function onAuthClick(e) {
 function onAuthChange(e) {
   if (typeof handlePlanChange === "function" && handlePlanChange(e)) return;
   if (typeof handleMembershipChange === "function" && handleMembershipChange(e)) return;
+  if (typeof handleWorkoutsChange === "function" && handleWorkoutsChange(e)) return;
   if (typeof handleNutritionChange === "function" && handleNutritionChange(e)) return;
   const priv = e.target.dataset.priv, notif = e.target.dataset.notif;
   if (priv) { const p = { ...currentUser().privacy }; p[priv] = e.target.checked; updateUser({ privacy: p }); return toast(t("saved")); }

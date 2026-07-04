@@ -349,6 +349,30 @@ img { max-width: 100%; }
 .reward .rw-name { font-size: 13px; font-weight: 700; margin: 6px 0 8px; min-height: 32px; }
 .reward .btn { width: 100%; padding: 8px; font-size: 13px; }
 
+/* ---- Pro upsell ---- */
+.pro-feats { list-style: none; margin: 12px 0 16px; padding: 0; }
+.pro-feats li { padding: 9px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+.pro-feats li:last-child { border-bottom: none; }
+
+/* ---- workout picker ---- */
+.wo-today { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+.wo-item { display: flex; align-items: center; gap: 10px; background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 10px 12px; font-size: 14px; cursor: pointer; }
+.wo-item.done span { text-decoration: line-through; color: var(--muted); }
+.wo-item input { width: 18px; height: 18px; }
+.wo-item span { flex: 1; }
+.wo-item [data-worem] { color: var(--muted); }
+.wo-muscles { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 12px; }
+.wo-mtab { border: 1px solid var(--border); background: var(--surface-2); color: var(--muted); border-radius: 999px;
+  padding: 6px 12px; font-size: 12.5px; font-weight: 700; cursor: pointer; }
+.wo-mtab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.wo-cat { display: grid; gap: 6px; }
+.wo-catitem { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--surface-2);
+  border: 1px solid var(--border); border-radius: 10px; padding: 9px 12px; font-size: 14px; }
+.sm-btn { padding: 5px 12px; font-size: 15px; line-height: 1; }
+.grid2b { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; }
+@media (max-width: 480px) { .grid2b { grid-template-columns: 1fr; } }
+
 /* ---- coach portal (gym staff) ---- */
 .coach-portal { position: fixed; inset: 0; background: var(--bg); z-index: 75; display: none; overflow-y: auto; }
 .coach-portal.show { display: block; }
