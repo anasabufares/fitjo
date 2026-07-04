@@ -36,7 +36,8 @@
       "Bash(curl -s https://fitjo-admin-portal.netlify.app/js/auth.js?x=__TRACKED_VAR__)",
       "Bash(curl -s https://fitjo-admin-portal.netlify.app/?x=__TRACKED_VAR__)",
       "Bash(export MSYS_NO_PATHCONV=1)",
-      "Bash(curl -s -X POST __TRACKED_VAR__/api/gyms -H 'Content-Type: application/json' -H 'x-admin-password: wrong-xyz' --data [] -w '\\\\nHTTP %{http_code}\\\\n')"
+      "Bash(curl -s -X POST __TRACKED_VAR__/api/gyms -H 'Content-Type: application/json' -H 'x-admin-password: wrong-xyz' --data [] -w '\\\\nHTTP %{http_code}\\\\n')",
+      "PowerShell($gh = \\(Get-Command gh -ErrorAction SilentlyContinue\\); if \\($gh\\) { \"gh FOUND: $\\($gh.Source\\)\"; gh --version 2>&1 | Select-Object -First 1 } else { \"gh NOT installed\" })"
     ]
   }
 }

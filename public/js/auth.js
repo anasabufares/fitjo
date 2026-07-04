@@ -448,7 +448,17 @@ function disable2FA() {
 function addPasskey() { updateUser({ passkeys: currentUser().passkeys + 1 }); toast(t("saved")); reRenderSection(); }
 
 /* ---------- actions ---------- */
-function afterAuth() { closeAuth(); updateAccessGate(); renderAll(); if (typeof startReminderScheduler === "function") startReminderScheduler(); const u = currentUser(); toast(`${t("hi")}, ${u.name.split(" ")[0]} 👋`); }
+/* Register the member in the cloud so the admin dashboard can see them (idempotent, best-effort). */
+function registerMember(u) {
+  if (!u) return;
+  try {
+    fetch("/api/members", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: u.name, email: u.email, phone: u.phone || "", age: u.age, createdAt: u.createdAt }),
+    }).catch(() => {});
+  } catch (e) {}
+}
+function afterAuth() { closeAuth(); updateAccessGate(); renderAll(); if (typeof startReminderScheduler === "function") startReminderScheduler(); const u = currentUser(); registerMember(u); toast(`${t("hi")}, ${u.name.split(" ")[0]} 👋`); }
 
 function startVerify(mode, data) {
   pendingVerify = { mode, ...data };

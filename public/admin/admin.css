@@ -80,6 +80,31 @@
 }
 .add-card:hover { color: var(--accent); border-color: var(--accent); }
 
+/* ---- Tabs (Gyms / Members) ---- */
+.admin-tabs { display: flex; gap: 6px; margin: 4px 0 16px; }
+.atab {
+  border: 1px solid var(--border); background: var(--surface); color: var(--muted);
+  border-radius: 999px; padding: 8px 16px; font-size: 13px; font-weight: 700; cursor: pointer;
+}
+.atab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+/* ---- Members ---- */
+.member-list { display: grid; gap: 10px; }
+.member-row {
+  display: flex; align-items: center; gap: 14px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 12px 14px; box-shadow: var(--shadow);
+}
+.member-avatar {
+  width: 42px; height: 42px; border-radius: 50%; flex: none; display: grid; place-items: center;
+  background: var(--accent); color: #fff; font-weight: 800; font-size: 17px;
+}
+.member-info { flex: 1; min-width: 0; }
+.member-info .nm { font-weight: 800; font-size: 15px; }
+.member-info .sub { color: var(--muted); font-size: 13px; margin-top: 1px; word-break: break-all; }
+.member-meta { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.muted-note { color: var(--muted); padding: 24px; text-align: center; font-size: 14px; }
+
 /* ---- Editor modal ---- */
 .ed-back {
   position: fixed; inset: 0; background: rgba(2, 6, 23, .55); backdrop-filter: blur(2px);

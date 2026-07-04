@@ -6,7 +6,8 @@
    Netlify; the password you type here is sent with each save.
    ============================================================= */
 
-const API = "/api/gyms";    // Netlify Function endpoint (GET public, POST needs password)
+const API = "/api/gyms";         // gyms Netlify Function (GET public, POST needs password)
+const API_MEMBERS = "/api/members"; // members Netlify Function (POST; admin actions need password)
 
 /* ---- Working copy of the gyms (edits here aren't saved until you Save). ---- */
 const clone = (x) => JSON.parse(JSON.stringify(x));
@@ -14,6 +15,8 @@ let gyms = clone(typeof GYMS !== "undefined" ? GYMS : []);   // built-in list = 
 let editingIndex = -1;      // index in `gyms`, or -1 for a new gym
 let cloudOnline = false;    // is the Netlify function reachable?
 let adminPw = sessionStorage.getItem("fj_admin_pw") || "";   // the admin password (this session)
+let view = "gyms";          // "gyms" | "members"
+let members = null;         // loaded member list (null = not loaded yet)
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
@@ -404,6 +407,75 @@ function downloadBackup() {
   toast("Backup downloaded");
 }
 
+/* ---------- Members ---------- */
+function switchView(v) {
+  view = v;
+  $$(".atab").forEach(b => b.classList.toggle("active", b.dataset.view === v));
+  $("#gymsView").style.display = v === "gyms" ? "" : "none";
+  $("#membersView").style.display = v === "members" ? "" : "none";
+  if (v === "members" && members === null) loadMembers();
+}
+
+async function loadMembers() {
+  const list = $("#memberList");
+  list.innerHTML = `<div class="muted-note">Loading members…</div>`;
+  try {
+    const r = await fetch(API_MEMBERS, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-admin-password": adminPw },
+      body: JSON.stringify({ action: "list" }),
+    });
+    if (r.status === 401) { relock("Wrong admin password — try again."); return; }
+    const j = await r.json().catch(() => ({}));
+    if (Array.isArray(j.members)) { members = j.members; renderMembers(); }
+    else { list.innerHTML = `<div class="muted-note">Couldn't load members: ${escAttr(j.error || ("HTTP " + r.status))}</div>`; }
+  } catch (e) {
+    list.innerHTML = `<div class="muted-note">Cloud not reachable — members only load on the deployed Netlify site.</div>`;
+  }
+}
+
+function fmtWhen(ts) {
+  if (!ts) return "—";
+  try { return new Date(ts).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" }); } catch (e) { return "—"; }
+}
+
+function renderMembers() {
+  const list = $("#memberList");
+  const arr = (members || []).slice().sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  $("#memberCount").textContent = `${arr.length} member${arr.length === 1 ? "" : "s"}`;
+  if (!arr.length) { list.innerHTML = `<div class="muted-note">No members yet. They appear here once someone signs up on the live app.</div>`; return; }
+  list.innerHTML = arr.map(m => `
+    <div class="member-row">
+      <div class="member-avatar">${escAttr((m.name || m.email || "?").trim().charAt(0).toUpperCase())}</div>
+      <div class="member-info">
+        <div class="nm">${escAttr(m.name || "(no name)")}</div>
+        <div class="sub">${escAttr(m.email)}</div>
+        <div class="member-meta">
+          <span class="tag">📱 ${escAttr(m.phone || "—")}</span>
+          <span class="tag">🎂 ${escAttr(m.age ?? "—")}</span>
+          <span class="tag">🗓️ ${escAttr(fmtWhen(m.createdAt))}</span>
+        </div>
+      </div>
+      <button class="abtn danger sm" data-delmember="${escAttr(m.email)}">Remove</button>
+    </div>`).join("");
+  $$("[data-delmember]", list).forEach(b => b.onclick = () => deleteMember(b.dataset.delmember));
+}
+
+async function deleteMember(email) {
+  if (!confirm(`Remove member "${email}" from the list?`)) return;
+  try {
+    const r = await fetch(API_MEMBERS, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-admin-password": adminPw },
+      body: JSON.stringify({ action: "delete", email }),
+    });
+    if (r.status === 401) { relock("Wrong admin password — try again."); return; }
+    const j = await r.json().catch(() => ({}));
+    if (j.ok) { members = (members || []).filter(m => m.email !== email); renderMembers(); toast("Member removed"); }
+    else toast("Remove failed: " + (j.error || ("HTTP " + r.status)), true);
+  } catch (e) { toast("Cloud not reachable", true); }
+}
+
 /* ---------- Wire up ---------- */
 async function startDashboard() {
   applyTheme();
@@ -411,6 +483,8 @@ async function startDashboard() {
   await loadGymsFromCloud();     // then show whatever is saved in the cloud
   renderList();
   checkCloud();
+  $$(".atab").forEach(b => b.onclick = () => switchView(b.dataset.view));
+  const rmb = $("#refreshMembers"); if (rmb) rmb.onclick = () => { members = null; loadMembers(); };
   $("#themeBtn").onclick = toggleTheme;
   const so = $("#signOutBtn"); if (so) so.onclick = () => relock("");
   $("#backupBtn").onclick = downloadBackup;
