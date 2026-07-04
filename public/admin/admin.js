@@ -18,6 +18,7 @@ let adminPw = sessionStorage.getItem("fj_admin_pw") || "";   // the admin passwo
 let view = "gyms";          // "gyms" | "members"
 let members = null;         // loaded member list (null = not loaded yet)
 let memberFilter = "";      // Members search box
+let memberSort = "new";     // new | old | name | saved
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
@@ -121,6 +122,7 @@ function nextId() {
 }
 
 function renderList() {
+  renderStats();
   $("#gymCount").textContent = `${gyms.length} gym${gyms.length === 1 ? "" : "s"}`;
   const list = $("#gymList");
   if (!gyms.length) {
@@ -409,6 +411,17 @@ function downloadBackup() {
 }
 
 /* ---------- Members ---------- */
+function renderStats() {
+  const el = $("#adminStats"); if (!el) return;
+  const withPlan = members ? members.filter(m => m.hasPlan).length : null;
+  const cards = [
+    ["🏋️", gyms.length, "Gyms"],
+    ["👥", members ? members.length : "—", "Members"],
+    ["📋", withPlan == null ? "—" : withPlan, "With a plan"],
+  ];
+  el.innerHTML = cards.map(([ic, n, l]) => `<div class="stat-card"><div class="sc-ic">${ic}</div><div class="sc-n">${n}</div><div class="sc-l">${l}</div></div>`).join("");
+}
+
 function switchView(v) {
   view = v;
   $$(".atab").forEach(b => b.classList.toggle("active", b.dataset.view === v));
@@ -428,7 +441,7 @@ async function loadMembers() {
     });
     if (r.status === 401) { relock("Wrong admin password — try again."); return; }
     const j = await r.json().catch(() => ({}));
-    if (Array.isArray(j.members)) { members = j.members; renderMembers(); }
+    if (Array.isArray(j.members)) { members = j.members; renderMembers(); renderStats(); }
     else { list.innerHTML = `<div class="muted-note">Couldn't load members: ${escAttr(j.error || ("HTTP " + r.status))}</div>`; }
   } catch (e) {
     list.innerHTML = `<div class="muted-note">Cloud not reachable — members only load on the deployed Netlify site.</div>`;
@@ -446,12 +459,18 @@ function renderMembers() {
   const q = memberFilter.trim().toLowerCase();
   let arr = all.slice();
   if (q) arr = arr.filter(m => (m.name || "").toLowerCase().includes(q) || (m.email || "").toLowerCase().includes(q) || (m.phone || "").includes(memberFilter.trim()));
-  arr.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  const sorters = {
+    new: (a, b) => (b.createdAt || 0) - (a.createdAt || 0),
+    old: (a, b) => (a.createdAt || 0) - (b.createdAt || 0),
+    name: (a, b) => (a.name || "").localeCompare(b.name || ""),
+    saved: (a, b) => (b.favorites || 0) - (a.favorites || 0),
+  };
+  arr.sort(sorters[memberSort] || sorters.new);
   $("#memberCount").textContent = `${arr.length} member${arr.length === 1 ? "" : "s"}${q ? ` of ${all.length}` : ""}`;
   if (!all.length) { list.innerHTML = `<div class="muted-note">No members yet. They appear here once someone signs up on the live app.</div>`; return; }
   if (!arr.length) { list.innerHTML = `<div class="muted-note">No members match “${escAttr(memberFilter)}”.</div>`; return; }
   list.innerHTML = arr.map(m => `
-    <div class="member-row">
+    <div class="member-row" data-member="${escAttr(m.email)}" title="View details">
       <div class="member-avatar">${escAttr((m.name || m.email || "?").trim().charAt(0).toUpperCase())}</div>
       <div class="member-info">
         <div class="nm">${escAttr(m.name || "(no name)")}</div>
@@ -467,8 +486,39 @@ function renderMembers() {
       </div>
       <button class="abtn danger sm" data-delmember="${escAttr(m.email)}">Remove</button>
     </div>`).join("");
-  $$("[data-delmember]", list).forEach(b => b.onclick = () => deleteMember(b.dataset.delmember));
+  $$(".member-row", list).forEach(row => row.onclick = (e) => {
+    if (e.target.closest("[data-delmember]")) return deleteMember(e.target.closest("[data-delmember]").dataset.delmember);
+    openMemberDetail(row.dataset.member);
+  });
 }
+
+function openMemberDetail(email) {
+  const m = (members || []).find(x => x.email === email);
+  if (!m) return;
+  const gymName = (id) => { const g = gyms.find(x => x.id === id); return g ? (g.name?.en || id) : id; };
+  const favs = m.favoriteIds || [];
+  const w = m.weights || {};
+  const row = (label, value) => `<div class="md-cell"><span>${label}</span><b>${escAttr(value)}</b></div>`;
+  $("#memberTitle").textContent = m.name || m.email;
+  $("#memberBody").innerHTML = `
+    <div class="md-grid">
+      ${row("Email", m.email)}
+      ${row("Phone", m.phone || "—")}
+      ${row("Age", m.age ?? "—")}
+      ${row("Goal", m.goal || "—")}
+      ${row("City", m.city || "—")}
+      ${row("Has plan", m.hasPlan ? "Yes" : "No")}
+      ${row("Joined", fmtWhen(m.createdAt))}
+      ${row("Last seen", fmtWhen(m.lastSeen))}
+    </div>
+    <div class="ed-section">Saved gyms (${favs.length})</div>
+    ${favs.length ? `<div class="md-tags">${favs.map(id => `<span class="tag">${escAttr(gymName(id))}</span>`).join("")}</div>` : `<div class="muted-note" style="padding:10px">None saved.</div>`}
+    <div class="ed-section">Weight</div>
+    ${w && w.count ? `<div class="md-grid">${row("Start", (w.start ?? "—") + " kg")}${row("Current", (w.current ?? "—") + " kg")}${row("Entries", w.count)}</div>`
+      : `<div class="muted-note" style="padding:10px">No weight logged.</div>`}`;
+  $("#memberBack").classList.add("show");
+}
+function closeMemberDetail() { $("#memberBack").classList.remove("show"); }
 
 function exportMembersCSV() {
   const arr = members || [];
@@ -508,7 +558,11 @@ async function startDashboard() {
   $$(".atab").forEach(b => b.onclick = () => switchView(b.dataset.view));
   const rmb = $("#refreshMembers"); if (rmb) rmb.onclick = () => { members = null; loadMembers(); };
   const ms = $("#memberSearch"); if (ms) ms.oninput = () => { memberFilter = ms.value; if (members) renderMembers(); };
+  const mso = $("#memberSort"); if (mso) mso.onchange = () => { memberSort = mso.value; if (members) renderMembers(); };
   const ex = $("#exportMembers"); if (ex) ex.onclick = exportMembersCSV;
+  const mc = $("#memberClose"); if (mc) mc.onclick = closeMemberDetail;
+  $("#memberBack").addEventListener("click", (e) => { if (e.target === $("#memberBack")) closeMemberDetail(); });
+  loadMembers();   // load in the background so the stats bar shows member counts
   $("#themeBtn").onclick = toggleTheme;
   const so = $("#signOutBtn"); if (so) so.onclick = () => relock("");
   $("#backupBtn").onclick = downloadBackup;

@@ -80,6 +80,16 @@
 }
 .add-card:hover { color: var(--accent); border-color: var(--accent); }
 
+/* ---- Stats bar ---- */
+.admin-stats { display: flex; gap: 10px; margin: 4px 0 14px; flex-wrap: wrap; }
+.stat-card {
+  flex: 1; min-width: 120px; background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px 16px;
+}
+.stat-card .sc-ic { font-size: 20px; }
+.stat-card .sc-n { font-size: 26px; font-weight: 800; margin-top: 4px; }
+.stat-card .sc-l { font-size: 12px; color: var(--muted); font-weight: 700; }
+
 /* ---- Tabs (Gyms / Members) ---- */
 .admin-tabs { display: flex; gap: 6px; margin: 4px 0 16px; }
 .atab {
@@ -93,8 +103,17 @@
 .member-row {
   display: flex; align-items: center; gap: 14px;
   background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
-  padding: 12px 14px; box-shadow: var(--shadow);
+  padding: 12px 14px; box-shadow: var(--shadow); cursor: pointer;
 }
+.member-row:hover { border-color: var(--accent); }
+
+/* member detail modal body */
+.md-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; margin-bottom: 4px; }
+.md-cell { display: flex; flex-direction: column; gap: 2px; }
+.md-cell span { font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+.md-cell b { font-size: 14px; word-break: break-all; }
+.md-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+@media (max-width: 560px) { .md-grid { grid-template-columns: 1fr; } }
 .member-avatar {
   width: 42px; height: 42px; border-radius: 50%; flex: none; display: grid; place-items: center;
   background: var(--accent); color: #fff; font-weight: 800; font-size: 17px;

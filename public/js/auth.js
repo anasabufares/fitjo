@@ -452,12 +452,15 @@ function addPasskey() { updateUser({ passkeys: currentUser().passkeys + 1 }); to
 function registerMember(u) {
   if (!u) return;
   try {
+    const favIds = (state.favorites || []).slice(0, 50);
+    const w = (u.weights || []).slice().sort((a, b) => a.date - b.date);
     fetch("/api/members", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name: u.name, email: u.email, phone: u.phone || "", age: u.age,
         goal: u.goal || "", city: u.city || "",
-        favorites: (state.favorites || []).length, hasPlan: !!u.intake,
+        favorites: favIds.length, favoriteIds: favIds, hasPlan: !!u.intake,
+        weights: { count: w.length, start: w.length ? w[0].kg : null, current: w.length ? w[w.length - 1].kg : null },
         createdAt: u.createdAt,
       }),
     }).catch(() => {});

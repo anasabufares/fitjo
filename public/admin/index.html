@@ -46,6 +46,8 @@
         <code>gyms</code> function and <code>ADMIN_PASSWORD</code> set. (It can't save from a plain local file.)
       </div>
 
+      <div class="admin-stats" id="adminStats"></div>
+
       <div class="admin-tabs">
         <button class="atab active" data-view="gyms">🏋️ Gyms</button>
         <button class="atab" data-view="members">👥 Members</button>
@@ -65,6 +67,12 @@
           <h1>Members</h1>
           <span class="count" id="memberCount"></span>
           <span class="admin-spacer"></span>
+          <select id="memberSort" class="member-search" style="min-width:auto">
+            <option value="new">Newest first</option>
+            <option value="old">Oldest first</option>
+            <option value="name">Name A–Z</option>
+            <option value="saved">Most saved gyms</option>
+          </select>
           <input id="memberSearch" class="member-search" placeholder="Search name / email / phone…" />
           <button class="abtn ghost sm" id="exportMembers">⇓ CSV</button>
           <button class="abtn ghost sm" id="refreshMembers">↻ Refresh</button>
@@ -86,6 +94,17 @@
         <button class="abtn ghost" id="edCancel">Cancel</button>
         <button class="abtn" id="edSave">Save gym</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Member detail modal -->
+  <div class="ed-back" id="memberBack">
+    <div class="ed-modal" style="max-width:520px">
+      <header>
+        <h2 id="memberTitle">Member</h2>
+        <button class="iconbtn" id="memberClose" aria-label="Close">✕</button>
+      </header>
+      <div class="ed-body" id="memberBody"></div>
     </div>
   </div>
 
