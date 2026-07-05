@@ -603,6 +603,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (state.view !== "detail") renderResults();
     renderFilters();
   }
-  setInterval(pollGyms, 20000);            // ~every 20s
+  setInterval(pollGyms, 15000);            // ~every 15s
   document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") pollGyms(); });
 });

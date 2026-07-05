@@ -708,6 +708,25 @@ async function deleteMember(email) {
   } catch (e) { toast("Cloud not reachable", true); }
 }
 
+/* ---------- Live auto-refresh (~15s + on focus) ---------- */
+async function adminPoll() {
+  if (document.visibilityState !== "visible") return;
+  try {
+    if (view === "members" && members !== null) {
+      const r = await fetch(API_MEMBERS, { method: "POST", headers: { "Content-Type": "application/json", "x-admin-password": adminPw }, body: JSON.stringify({ action: "list" }) });
+      if (!r.ok) return;
+      const j = await r.json();
+      if (Array.isArray(j.members) && JSON.stringify(j.members) !== JSON.stringify(members)) { members = j.members; renderMembers(); }
+    } else if (view === "coaches" && coachCodes !== null) {
+      const j = await coachAction({ action: "coach-codes" });
+      if (j && Array.isArray(j.codes) && JSON.stringify(j.codes) !== JSON.stringify(coachCodes)) { coachCodes = j.codes; renderCoachCodes(); }
+    } else if (view === "owners" && ownerCodes !== null) {
+      const j = await coachAction({ action: "owner-codes" });
+      if (j && Array.isArray(j.codes) && JSON.stringify(j.codes) !== JSON.stringify(ownerCodes)) { ownerCodes = j.codes; renderOwnerCodes(); }
+    }
+  } catch (e) { /* ignore */ }
+}
+
 /* ---------- Wire up ---------- */
 async function startDashboard() {
   applyTheme();
@@ -730,6 +749,8 @@ async function startDashboard() {
   const mc = $("#memberClose"); if (mc) mc.onclick = closeMemberDetail;
   $("#memberBack").addEventListener("click", (e) => { if (e.target === $("#memberBack")) closeMemberDetail(); });
   loadMembers();   // load in the background so the stats bar shows member counts
+  setInterval(adminPoll, 15000);
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") adminPoll(); });
   $("#themeBtn").onclick = toggleTheme;
   const so = $("#signOutBtn"); if (so) so.onclick = () => relock("");
   $("#backupBtn").onclick = downloadBackup;

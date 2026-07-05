@@ -65,6 +65,7 @@ function renderMembers() {
   const arr = (members || []).slice().sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
   $("#oBody").innerHTML = `
     <div class="admin-head"><h1>Members</h1><span class="count">${arr.length} member${arr.length === 1 ? "" : "s"}</span>
+      <span class="live-dot" title="auto-updating">● live</span>
       <span class="admin-spacer"></span><button class="abtn sm" id="oAddMember">＋ Add member</button></div>
     <div class="cc-gen" id="oMemberForm" style="display:none;flex-wrap:wrap">
       <input class="member-search" id="omName" placeholder="Full name">
@@ -174,6 +175,26 @@ async function addEmployee() {
   else if (j) toast("Failed: " + (j.error || "error"), true);
 }
 
+/* ---------- live auto-refresh (~15s + on focus) ---------- */
+async function ownerPoll() {
+  if (document.visibilityState !== "visible" || !ownerCode) return;
+  const ae = document.activeElement;
+  if (ae && ae.tagName === "INPUT" && $("#oBody") && $("#oBody").contains(ae)) return; // don't clobber typing
+  try {
+    if (oview === "members") {
+      const f = $("#oMemberForm"); if (f && f.style.display !== "none") return;
+      const j = await ownerAction({ action: "list" });
+      if (j && Array.isArray(j.members) && JSON.stringify(j.members) !== JSON.stringify(members)) { members = j.members; renderMembers(); }
+    } else if (oview === "coaches") {
+      const j = await ownerAction({ action: "coach-codes" });
+      if (j && Array.isArray(j.codes) && JSON.stringify(j.codes) !== JSON.stringify(coachCodes)) { coachCodes = j.codes; drawCoachCodes(); }
+    } else if (oview === "employees") {
+      const j = await ownerAction({ action: "employees" });
+      if (j && Array.isArray(j.employees) && JSON.stringify(j.employees) !== JSON.stringify(employees)) { employees = j.employees; drawEmployees(); }
+    }
+  } catch (e) { /* ignore */ }
+}
+
 /* ---------- boot ---------- */
 function startDashboard() {
   applyTheme();
@@ -182,5 +203,7 @@ function startDashboard() {
   $("#signOutBtn").onclick = () => relock("");
   $$(".atab").forEach(b => b.onclick = () => switchView(b.dataset.oview));
   render();
+  setInterval(ownerPoll, 15000);
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") ownerPoll(); });
 }
 initGate();

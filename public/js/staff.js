@@ -1,13 +1,14 @@
 /* =============================================================
    FitJo — coach portal (gym staff)
-   Coaches sign in with a COACH_PASSWORD and see the members who
-   opted in to "Let trainers contact me" (privacy setting), with
-   Call / WhatsApp. Owners are routed to the admin dashboard.
+   Coaches sign in with an access key and see the members who opted
+   in to "Let trainers contact me", with Call / WhatsApp. The list
+   auto-refreshes (~every 15s + on tab focus) so new opt-ins appear.
    Relies on globals: state, esc, tL, toast, showErr, openAuth.
    ============================================================= */
 
 let coachMembers = [];
 let coachName = "";
+let coachPollTimer = null;
 
 async function enterCoachPortal(code) {
   try {
@@ -51,34 +52,71 @@ function coachRow(m) {
     </div>`;
 }
 
-function showCoachPortal() {
-  const el = document.getElementById("coachPortal");
+function renderCoachList() {
+  const el = document.getElementById("cpList");
   if (!el) return;
   const arr = coachMembers || [];
-  el.innerHTML = `
-    <div class="cp-top">
-      <div class="admin-brand"><span class="logo">🧑‍🏫</span><span>FitJo<small>${tL("Coach portal", "بوابة المدرب")}${coachName ? " · " + esc(coachName) : ""}</small></span></div>
-      <span style="flex:1"></span>
-      <button class="abtn ghost sm" id="coachRefresh">↻</button>
-      <button class="abtn ghost sm" id="coachOut">${tL("Sign out", "خروج")}</button>
-    </div>
-    <div class="cp-wrap">
-      <h1 style="font-size:22px;margin-bottom:4px">${tL("My members", "أعضائي")}</h1>
-      <p style="color:var(--muted);margin-bottom:16px">${tL("Members who allowed trainers to contact them.", "الأعضاء الذين سمحوا للمدربين بالتواصل معهم.")} (${arr.length})</p>
-      <div class="member-list">
-        ${arr.length ? arr.map(coachRow).join("") : `<div class="muted-note" style="color:var(--muted);text-align:center;padding:30px">${tL("No members have opted in yet. They appear here when a member turns on “Let trainers contact me”.", "لا يوجد أعضاء وافقوا بعد.")}</div>`}
-      </div>
-    </div>`;
-  el.classList.add("show");
-  document.body.style.overflow = "hidden";
-  document.getElementById("coachOut").onclick = exitCoachPortal;
-  const rf = document.getElementById("coachRefresh");
-  if (rf) rf.onclick = () => { const c = sessionStorage.getItem("fj_coach_pw"); if (c) enterCoachPortal(c); };
+  el.innerHTML = arr.length
+    ? arr.map(coachRow).join("")
+    : `<div class="muted-note" style="color:var(--muted);text-align:center;padding:30px">${tL("No members have opted in yet. They appear here when a member turns on “Let trainers contact me”.", "لا يوجد أعضاء وافقوا بعد.")}</div>`;
+  const c = document.getElementById("cpCount"); if (c) c.textContent = "(" + arr.length + ")";
   el.querySelectorAll("[data-call]").forEach(b => b.onclick = () => { window.location.href = "tel:" + b.dataset.call; });
   el.querySelectorAll("[data-wa]").forEach(b => b.onclick = () => window.open("https://wa.me/" + b.dataset.wa, "_blank"));
 }
 
+function showCoachPortal() {
+  const el = document.getElementById("coachPortal");
+  if (!el) return;
+  el.innerHTML = `
+    <div class="cp-top">
+      <div class="admin-brand"><span class="logo">🧑‍🏫</span><span>FitJo<small>${tL("Coach portal", "بوابة المدرب")}${coachName ? " · " + esc(coachName) : ""}</small></span></div>
+      <span style="flex:1"></span>
+      <span class="live-dot" title="auto-updating">● ${tL("live", "مباشر")}</span>
+      <button class="abtn ghost sm" id="coachRefresh">↻</button>
+      <button class="abtn ghost sm" id="coachOut">${tL("Sign out", "خروج")}</button>
+    </div>
+    <div class="cp-wrap">
+      <h1 style="font-size:22px;margin-bottom:4px">${tL("My members", "أعضائي")} <span id="cpCount">(${(coachMembers || []).length})</span></h1>
+      <p style="color:var(--muted);margin-bottom:16px">${tL("Members who allowed trainers to contact them.", "الأعضاء الذين سمحوا للمدربين بالتواصل معهم.")}</p>
+      <div class="member-list" id="cpList"></div>
+    </div>`;
+  el.classList.add("show");
+  document.body.style.overflow = "hidden";
+  document.getElementById("coachOut").onclick = exitCoachPortal;
+  const rf = document.getElementById("coachRefresh"); if (rf) rf.onclick = refreshCoach;
+  renderCoachList();
+  startCoachPolling();
+}
+
+async function refreshCoach() {
+  const code = sessionStorage.getItem("fj_coach_pw");
+  if (!code) return;
+  try {
+    const r = await fetch("/api/members", {
+      method: "POST", headers: { "Content-Type": "application/json", "x-coach-password": code },
+      body: JSON.stringify({ action: "coach-list" }),
+    });
+    if (!r.ok) return;
+    const j = await r.json();
+    if (Array.isArray(j.members) && JSON.stringify(j.members) !== JSON.stringify(coachMembers)) {
+      coachMembers = j.members;
+      renderCoachList();
+    }
+  } catch (e) { /* ignore */ }
+}
+function coachVis() { if (document.visibilityState === "visible") refreshCoach(); }
+function startCoachPolling() {
+  stopCoachPolling();
+  coachPollTimer = setInterval(() => { if (document.visibilityState === "visible") refreshCoach(); }, 15000);
+  document.addEventListener("visibilitychange", coachVis);
+}
+function stopCoachPolling() {
+  if (coachPollTimer) { clearInterval(coachPollTimer); coachPollTimer = null; }
+  document.removeEventListener("visibilitychange", coachVis);
+}
+
 function exitCoachPortal() {
+  stopCoachPolling();
   const el = document.getElementById("coachPortal");
   if (el) { el.classList.remove("show"); el.innerHTML = ""; }
   sessionStorage.removeItem("fj_coach_pw");
