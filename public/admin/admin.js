@@ -454,9 +454,9 @@ async function loadCoachCodes() {
 }
 function renderCoachCodes() {
   const arr = (coachCodes || []).slice().sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-  $("#coachCount").textContent = `${arr.length} passkey${arr.length === 1 ? "" : "s"}`;
+  $("#coachCount").textContent = `${arr.length} key${arr.length === 1 ? "" : "s"}`;
   const list = $("#coachCodesList");
-  if (!arr.length) { list.innerHTML = `<div class="muted-note">No passkeys yet. Generate one above for each coach.</div>`; return; }
+  if (!arr.length) { list.innerHTML = `<div class="muted-note">No access keys yet. Generate one above for each coach.</div>`; return; }
   list.innerHTML = arr.map(c => `
     <div class="cc-row">
       <div class="cc-info">
@@ -474,13 +474,13 @@ function renderCoachCodes() {
 async function generateCoachCode() {
   const label = ($("#coachLabel").value || "").trim();
   const j = await coachAction({ action: "coach-code-add", label });
-  if (j && j.ok) { coachCodes = j.codes; $("#coachLabel").value = ""; renderCoachCodes(); toast(`Passkey generated: ${j.code}`); }
+  if (j && j.ok) { coachCodes = j.codes; $("#coachLabel").value = ""; renderCoachCodes(); toast(`Access key generated: ${j.code}`); }
   else if (j) toast("Failed: " + (j.error || "error"), true);
 }
 async function revokeCoachCode(code) {
-  if (!confirm(`Revoke passkey ${code}? The coach using it will lose access.`)) return;
+  if (!confirm(`Revoke access key ${code}? The coach using it will lose access.`)) return;
   const j = await coachAction({ action: "coach-code-del", code });
-  if (j && j.ok) { coachCodes = j.codes; renderCoachCodes(); toast("Passkey revoked"); }
+  if (j && j.ok) { coachCodes = j.codes; renderCoachCodes(); toast("Access key revoked"); }
 }
 function copyCoachCode(code) {
   try { navigator.clipboard.writeText(code); toast("Copied " + code); }
@@ -580,7 +580,13 @@ function openMemberDetail(email) {
     ${favs.length ? `<div class="md-tags">${favs.map(id => `<span class="tag">${escAttr(gymName(id))}</span>`).join("")}</div>` : `<div class="muted-note" style="padding:10px">None saved.</div>`}
     <div class="ed-section">Weight</div>
     ${w && w.count ? `<div class="md-grid">${row("Start", (w.start ?? "—") + " kg")}${row("Current", (w.current ?? "—") + " kg")}${row("Entries", w.count)}</div>`
-      : `<div class="muted-note" style="padding:10px">No weight logged.</div>`}`;
+      : `<div class="muted-note" style="padding:10px">No weight logged.</div>`}
+    <div style="display:flex;gap:8px;margin-top:18px">
+      <button class="abtn" id="editMemberBtn">✏️ Edit member</button>
+      <button class="abtn danger" id="delMemberBtn">Remove</button>
+    </div>`;
+  $("#editMemberBtn").onclick = () => openEditMember(m.email);
+  $("#delMemberBtn").onclick = () => { closeMemberDetail(); deleteMember(m.email); };
   $("#memberBack").classList.add("show");
 }
 function closeMemberDetail() { $("#memberBack").classList.remove("show"); }
@@ -600,6 +606,21 @@ function exportMembersCSV() {
 
 function openAddMember() {
   ["amName", "amEmail", "amPhone", "amAge", "amGoal", "amCity"].forEach(id => { const el = $("#" + id); if (el) el.value = ""; });
+  $("#addMemberBack").querySelector("h2").textContent = "Add a member";
+  $("#addMemberSave").textContent = "Add member";
+  $("#amEmail").disabled = false;
+  $("#addMemberBack").classList.add("show");
+}
+function openEditMember(email) {
+  const m = (members || []).find(x => x.email === email);
+  if (!m) return;
+  closeMemberDetail();
+  $("#amName").value = m.name || ""; $("#amEmail").value = m.email || "";
+  $("#amPhone").value = m.phone || ""; $("#amAge").value = m.age ?? "";
+  $("#amGoal").value = m.goal || ""; $("#amCity").value = m.city || "";
+  $("#amEmail").disabled = true;   // email is the key; keep it fixed while editing
+  $("#addMemberBack").querySelector("h2").textContent = "Edit member";
+  $("#addMemberSave").textContent = "Save changes";
   $("#addMemberBack").classList.add("show");
 }
 function closeAddMember() { $("#addMemberBack").classList.remove("show"); }

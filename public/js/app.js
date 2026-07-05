@@ -561,19 +561,38 @@ function openPayModal() {
 function closePayModal() { $("#modalBack").classList.remove("open"); }
 
 /* ---------- Load gyms from the cloud (Netlify), falling back to the built-in list ---------- */
+let lastGymsJSON = "";
+function applyCloudGyms(list) {
+  GYMS.length = 0;
+  list.forEach(g => GYMS.push(g));
+  GYMS.forEach(g => { if (typeof g.open247 !== "boolean") g.open247 = false; });
+  if (typeof AREA_COORDS !== "undefined") GYMS.forEach(g => { if (!g.coords && g.area && AREA_COORDS[g.area.en]) g.coords = AREA_COORDS[g.area.en]; });
+  lastGymsJSON = JSON.stringify(list);
+}
 async function hydrateGymsFromCloud() {
   try {
     const res = await fetch("/api/gyms", { cache: "no-store" });
     if (!res.ok) return false;
     const data = await res.json();
-    if (data && Array.isArray(data.gyms) && data.gyms.length) {
-      GYMS.length = 0;
-      data.gyms.forEach(g => GYMS.push(g));
-      GYMS.forEach(g => { if (typeof g.open247 !== "boolean") g.open247 = false; });
-      return true;
-    }
+    if (data && Array.isArray(data.gyms) && data.gyms.length) { applyCloudGyms(data.gyms); return true; }
   } catch (e) { /* offline or no backend yet — keep the built-in gyms */ }
   return false;
+}
+/* Poll the cloud so gyms added/edited in the admin show up in the app quickly. */
+async function pollGyms() {
+  if (document.visibilityState !== "visible") return;
+  try {
+    const res = await fetch("/api/gyms", { cache: "no-store" });
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data && Array.isArray(data.gyms) && data.gyms.length) {
+      const j = JSON.stringify(data.gyms);
+      if (j !== lastGymsJSON) {
+        applyCloudGyms(data.gyms);
+        if (state.view !== "detail") { renderResults(); renderFilters(); }
+      }
+    }
+  } catch (e) { /* ignore */ }
 }
 
 /* ---------- Boot ---------- */
@@ -584,4 +603,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (state.view !== "detail") renderResults();
     renderFilters();
   }
+  setInterval(pollGyms, 20000);            // ~every 20s
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") pollGyms(); });
 });
