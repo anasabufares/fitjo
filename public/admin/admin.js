@@ -20,6 +20,7 @@ let members = null;         // loaded member list (null = not loaded yet)
 let memberFilter = "";      // Members search box
 let memberSort = "new";     // new | old | name | saved
 let coachCodes = null;      // loaded coach passkeys (null = not loaded)
+let ownerCodes = null;      // loaded gym-owner access codes (null = not loaded)
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
@@ -436,8 +437,51 @@ function switchView(v) {
   $("#gymsView").style.display = v === "gyms" ? "" : "none";
   $("#membersView").style.display = v === "members" ? "" : "none";
   $("#coachesView").style.display = v === "coaches" ? "" : "none";
+  $("#ownersView").style.display = v === "owners" ? "" : "none";
   if (v === "members" && members === null) loadMembers();
   if (v === "coaches" && coachCodes === null) loadCoachCodes();
+  if (v === "owners" && ownerCodes === null) loadOwnerCodes();
+}
+
+/* ---------- Gym owner access codes (super-admin only) ---------- */
+async function loadOwnerCodes() {
+  const list = $("#ownerCodesList");
+  list.innerHTML = `<div class="muted-note">Loading…</div>`;
+  try {
+    const j = await coachAction({ action: "owner-codes" });
+    if (j && Array.isArray(j.codes)) { ownerCodes = j.codes; renderOwnerCodes(); }
+    else if (j) list.innerHTML = `<div class="muted-note">Couldn't load: ${escAttr(j.error || "error")}</div>`;
+  } catch (e) { list.innerHTML = `<div class="muted-note">Cloud not reachable — works on the deployed Netlify site.</div>`; }
+}
+function renderOwnerCodes() {
+  const arr = (ownerCodes || []).slice().sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  $("#ownerCount").textContent = `${arr.length} code${arr.length === 1 ? "" : "s"}`;
+  const list = $("#ownerCodesList");
+  if (!arr.length) { list.innerHTML = `<div class="muted-note">No owner codes yet. Generate one for each gym owner.</div>`; return; }
+  list.innerHTML = arr.map(c => `
+    <div class="cc-row">
+      <div class="cc-info">
+        <div class="cc-code">${escAttr(c.code)}</div>
+        <div class="cc-label">${escAttr(c.label || "Gym owner")} · ${fmtWhen(c.createdAt)}</div>
+      </div>
+      <div class="acts">
+        <button class="abtn ghost sm" data-copyowner="${escAttr(c.code)}">Copy</button>
+        <button class="abtn danger sm" data-delowner="${escAttr(c.code)}">Revoke</button>
+      </div>
+    </div>`).join("");
+  $$("[data-copyowner]", list).forEach(b => b.onclick = () => copyCoachCode(b.dataset.copyowner));
+  $$("[data-delowner]", list).forEach(b => b.onclick = () => revokeOwnerCode(b.dataset.delowner));
+}
+async function generateOwnerCode() {
+  const label = ($("#ownerLabel").value || "").trim();
+  const j = await coachAction({ action: "owner-code-add", label });
+  if (j && j.ok) { ownerCodes = j.codes; $("#ownerLabel").value = ""; renderOwnerCodes(); toast(`Owner code generated: ${j.code}`); }
+  else if (j) toast("Failed: " + (j.error || "error"), true);
+}
+async function revokeOwnerCode(code) {
+  if (!confirm(`Revoke owner code ${code}? That owner will lose access.`)) return;
+  const j = await coachAction({ action: "owner-code-del", code });
+  if (j && j.ok) { ownerCodes = j.codes; renderOwnerCodes(); toast("Owner code revoked"); }
 }
 
 /* ---------- Coach passkeys ---------- */
@@ -677,6 +721,7 @@ async function startDashboard() {
   const mso = $("#memberSort"); if (mso) mso.onchange = () => { memberSort = mso.value; if (members) renderMembers(); };
   const ex = $("#exportMembers"); if (ex) ex.onclick = exportMembersCSV;
   const gc = $("#genCoach"); if (gc) gc.onclick = generateCoachCode;
+  const go = $("#genOwner"); if (go) go.onclick = generateOwnerCode;
   const amb = $("#addMemberBtn"); if (amb) amb.onclick = openAddMember;
   const amc = $("#addMemberClose"); if (amc) amc.onclick = closeAddMember;
   const amx = $("#addMemberCancel"); if (amx) amx.onclick = closeAddMember;

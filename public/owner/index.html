@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FitJo — Gym Owner</title>
+  <link rel="icon" type="image/png" href="../icons/icon-192.png" />
+  <link rel="stylesheet" href="../css/styles.css" />
+  <link rel="stylesheet" href="../admin/admin.css" />
+</head>
+<body class="admin-body">
+
+  <!-- Access-code gate -->
+  <div class="gate" id="gate">
+    <div class="gate-card">
+      <div class="logo">🔑</div>
+      <h1>Gym Owner</h1>
+      <p>Enter your owner access code to manage your members, coaches and employees.</p>
+      <input id="gatePass" type="password" placeholder="Owner access code (OW-XXXX-XXXX)" autocomplete="off" />
+      <div class="gate-err" id="gateErr"></div>
+      <button class="abtn" id="gateBtn" style="width:100%">Unlock</button>
+    </div>
+  </div>
+
+  <!-- Dashboard -->
+  <div id="dash" style="display:none">
+    <div class="admin-top">
+      <div class="admin-top-inner">
+        <div class="admin-brand">
+          <span class="logo">🔑</span>
+          <span>FitJo<small id="ownerSub">Gym owner</small></span>
+        </div>
+        <div class="admin-spacer"></div>
+        <button class="abtn ghost sm" id="themeBtn" title="Theme">🌙</button>
+        <button class="abtn ghost sm" id="signOutBtn">Sign out</button>
+      </div>
+    </div>
+
+    <div class="admin-wrap">
+      <div class="admin-tabs" id="oTabs">
+        <button class="atab active" data-oview="members">👥 Members</button>
+        <button class="atab" data-oview="coaches">🧑‍🏫 Coaches</button>
+        <button class="atab" data-oview="employees">👔 Employees</button>
+      </div>
+      <div id="oBody"></div>
+    </div>
+  </div>
+
+  <div class="atoast" id="atoast"></div>
+  <script src="owner.js"></script>
+</body>
+</html>

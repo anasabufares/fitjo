@@ -52,6 +52,7 @@
         <button class="atab active" data-view="gyms">🏋️ Gyms</button>
         <button class="atab" data-view="members">👥 Members</button>
         <button class="atab" data-view="coaches">🧑‍🏫 Coaches</button>
+        <button class="atab" data-view="owners">🔑 Owners</button>
       </div>
 
       <div id="gymsView">
@@ -61,6 +62,23 @@
         </div>
         <div class="gym-list" id="gymList"></div>
         <button class="add-card" id="addBtn">＋ Add a gym</button>
+      </div>
+
+      <div id="ownersView" style="display:none">
+        <div class="admin-head">
+          <h1>Gym owner access codes</h1>
+          <span class="count" id="ownerCount"></span>
+        </div>
+        <div class="banner" style="border-color:var(--border);background:var(--surface-2);color:var(--muted)">
+          Generate an access code for each gym owner. They open the owner dashboard at
+          <b>/owner/</b> (or sign in via <b>Gym staff → Owner</b>) with the code to manage their
+          members, coaches and employees. Revoke anytime.
+        </div>
+        <div class="cc-gen">
+          <input id="ownerLabel" class="member-search" placeholder="Owner / gym name (optional)" />
+          <button class="abtn" id="genOwner">＋ Generate owner code</button>
+        </div>
+        <div class="coach-codes" id="ownerCodesList"></div>
       </div>
 
       <div id="coachesView" style="display:none">

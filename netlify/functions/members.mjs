@@ -24,6 +24,7 @@ export default async (req) => {
   const store = getStore("fitjo");
   const pw = req.headers.get("x-admin-password");
   const coachPw = req.headers.get("x-coach-password");
+  const ownerCode = req.headers.get("x-owner-code");
 
   let body;
   try { body = await req.json(); } catch { body = {}; }
@@ -45,39 +46,78 @@ export default async (req) => {
     return json({ members: opted, coach: match && match.label ? match.label : "" });
   }
 
-  // ---- Admin actions (password required) ----
+  // ---- Determine the caller: super-admin (ADMIN_PASSWORD) or gym owner (owner access code) ----
+  let auth = null;
   if (pw != null && pw !== "") {
     if (!process.env.ADMIN_PASSWORD) return json({ ok: false, error: "ADMIN_PASSWORD is not set in Netlify." }, 500);
     if (pw !== process.env.ADMIN_PASSWORD) return json({ ok: false, error: "Wrong admin password." }, 401);
+    auth = "admin";
+  } else if (ownerCode != null && ownerCode !== "") {
+    const owners = (await store.get("owner_codes", { type: "json" })) || [];
+    const match = owners.find(o => o.code === ownerCode);
+    if (!match) return json({ ok: false, error: "Wrong owner access code." }, 401);
+    auth = "owner";
+    body._ownerLabel = match.label || "";
+  }
 
-    const list = (await store.get(KEY, { type: "json" })) || [];
-    if (body.action === "list") return json({ members: list });
+  if (auth) {
+    const genCode = (prefix) => { const rnd = () => Math.random().toString(36).slice(2, 6).toUpperCase(); return `${prefix}-${rnd()}-${rnd()}`; };
+
+    // ---- Members (admin + owner) ----
+    if (body.action === "list") return json({ members: (await store.get(KEY, { type: "json" })) || [], owner: body._ownerLabel || "" });
     if (body.action === "delete") {
       const email = String(body.email || "").trim().toLowerCase();
-      const next = list.filter(m => m.email !== email);
+      const next = ((await store.get(KEY, { type: "json" })) || []).filter(m => m.email !== email);
       await store.setJSON(KEY, next);
       return json({ ok: true, count: next.length });
     }
-    // ---- Coach passkeys (owner generates / lists / revokes) ----
-    if (body.action === "coach-codes") {
-      const codes = (await store.get("coach_codes", { type: "json" })) || [];
-      return json({ codes });
-    }
+    // ---- Coach access keys (admin + owner) ----
+    if (body.action === "coach-codes") return json({ codes: (await store.get("coach_codes", { type: "json" })) || [] });
     if (body.action === "coach-code-add") {
       const codes = (await store.get("coach_codes", { type: "json" })) || [];
-      const rnd = () => Math.random().toString(36).slice(2, 6).toUpperCase();
-      const code = `CX-${rnd()}-${rnd()}`;
+      const code = genCode("CX");
       codes.push({ code, label: String(body.label || "").slice(0, 40), createdAt: Date.now() });
       await store.setJSON("coach_codes", codes);
       return json({ ok: true, code, codes });
     }
     if (body.action === "coach-code-del") {
-      let codes = (await store.get("coach_codes", { type: "json" })) || [];
-      codes = codes.filter(c => c.code !== body.code);
+      const codes = ((await store.get("coach_codes", { type: "json" })) || []).filter(c => c.code !== body.code);
       await store.setJSON("coach_codes", codes);
       return json({ ok: true, codes });
     }
-    return json({ ok: false, error: "Unknown admin action." }, 400);
+    // ---- Employees (admin + owner) ----
+    if (body.action === "employees") return json({ employees: (await store.get("employees", { type: "json" })) || [] });
+    if (body.action === "employee-add") {
+      const emps = (await store.get("employees", { type: "json" })) || [];
+      const emp = { id: "e" + Date.now(), name: String(body.name || "").slice(0, 60), role: String(body.role || "").slice(0, 40), phone: String(body.phone || "").slice(0, 30), createdAt: Date.now() };
+      if (!emp.name) return json({ ok: false, error: "Employee name required." }, 400);
+      emps.push(emp);
+      await store.setJSON("employees", emps);
+      return json({ ok: true, employees: emps });
+    }
+    if (body.action === "employee-del") {
+      const emps = ((await store.get("employees", { type: "json" })) || []).filter(e => e.id !== body.id);
+      await store.setJSON("employees", emps);
+      return json({ ok: true, employees: emps });
+    }
+    // ---- Owner access codes (super-admin ONLY) ----
+    if (auth === "admin") {
+      if (body.action === "owner-codes") return json({ codes: (await store.get("owner_codes", { type: "json" })) || [] });
+      if (body.action === "owner-code-add") {
+        const codes = (await store.get("owner_codes", { type: "json" })) || [];
+        const code = genCode("OW");
+        codes.push({ code, label: String(body.label || "").slice(0, 40), createdAt: Date.now() });
+        await store.setJSON("owner_codes", codes);
+        return json({ ok: true, code, codes });
+      }
+      if (body.action === "owner-code-del") {
+        const codes = ((await store.get("owner_codes", { type: "json" })) || []).filter(c => c.code !== body.code);
+        await store.setJSON("owner_codes", codes);
+        return json({ ok: true, codes });
+      }
+    }
+    if (["owner-codes", "owner-code-add", "owner-code-del"].includes(body.action)) return json({ ok: false, error: "Only the super-admin can manage owner codes." }, 403);
+    return json({ ok: false, error: "Unknown action." }, 400);
   }
 
   // ---- Public: register / upsert a member on sign-up ----
