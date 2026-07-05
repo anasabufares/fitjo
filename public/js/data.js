@@ -1013,6 +1013,9 @@ const FEAT_I18N = {
     geoUnsupported: "Location isn't supported on this device.",
     youAreHere: "You are here", mapOffline: "The map needs an internet connection.",
     nearMeOn: "Sorted by distance",
+    installApp: "Install app",
+    installIosHint: "To install FitJo: tap the Share button, then “Add to Home Screen”.",
+    installedToast: "FitJo installed 🎉",
   },
   ar: {
     open247: "مفتوح 24/7", h247: "24/7", filter247: "المفتوحة 24/7 فقط", hours247short: "24 ساعة",
@@ -1032,6 +1035,9 @@ const FEAT_I18N = {
     geoUnsupported: "تحديد الموقع غير مدعوم على هذا الجهاز.",
     youAreHere: "أنت هنا", mapOffline: "تحتاج الخريطة إلى اتصال بالإنترنت.",
     nearMeOn: "مرتّب حسب المسافة",
+    installApp: "تثبيت التطبيق",
+    installIosHint: "لتثبيت FitJo: اضغط زر المشاركة ثم «إضافة إلى الشاشة الرئيسية».",
+    installedToast: "تم تثبيت FitJo 🎉",
   },
 };
 Object.assign(I18N.en, FEAT_I18N.en);

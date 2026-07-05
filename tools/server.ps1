@@ -11,6 +11,7 @@ $repoRoot = Split-Path -Parent $toolsDir
 $root     = Join-Path $repoRoot "public"          # <- static site lives here
 $dataFile = Join-Path $root "js\data.js"           # <- the gyms file the admin edits
 $backupFile = Join-Path $repoRoot "data.js.bak"    # <- kept outside public/ (not deployed)
+$gymsStore  = Join-Path $repoRoot "gyms.store.json" # <- local stand-in for the cloud gym store (/api/gyms)
 $prefix   = "http://localhost:8080/"
 
 $listener = New-Object System.Net.HttpListener
@@ -47,6 +48,34 @@ while ($listener.IsListening) {
     # ---- Health check so the admin page knows the server is running ----
     if ($req.HttpMethod -eq "GET" -and $path -eq "api/ping") {
       Send-Text $ctx 200 "application/json; charset=utf-8" '{"ok":true,"server":"fitjo"}'
+    }
+
+    # ---- Gym store (local stand-in for the Netlify /api/gyms function) ----
+    #   GET  -> { "gyms": [...] }   (the app + admin read this)
+    #   POST -> body is a JSON array of gyms; saved so the app picks it up on its next poll.
+    #   No password locally (dev only); the live site enforces ADMIN_PASSWORD.
+    elseif ($req.HttpMethod -eq "GET" -and $path -eq "api/gyms") {
+      if (Test-Path $gymsStore) {
+        $json = [System.IO.File]::ReadAllText($gymsStore, [System.Text.Encoding]::UTF8)
+        Send-Text $ctx 200 "application/json; charset=utf-8" $json
+      } else {
+        Send-Text $ctx 200 "application/json; charset=utf-8" '{"gyms":[]}'
+      }
+    }
+    elseif ($req.HttpMethod -eq "POST" -and $path -eq "api/gyms") {
+      $enc = $req.ContentEncoding
+      if (-not $enc) { $enc = [System.Text.Encoding]::UTF8 }
+      $reader = New-Object System.IO.StreamReader($req.InputStream, $enc)
+      $body = $reader.ReadToEnd(); $reader.Close()
+      if (-not $body.TrimStart().StartsWith("[")) {
+        Send-Text $ctx 400 "application/json; charset=utf-8" '{"ok":false,"error":"Body must be a JSON array of gyms."}'
+      }
+      else {
+        $wrapped = '{"gyms":' + $body + '}'
+        $utf8 = New-Object System.Text.UTF8Encoding($false)   # no BOM
+        [System.IO.File]::WriteAllText($gymsStore, $wrapped, $utf8)
+        Send-Text $ctx 200 "application/json; charset=utf-8" '{"ok":true}'
+      }
     }
 
     # ---- Admin save: overwrite the GYMS block in public/js/data.js ----

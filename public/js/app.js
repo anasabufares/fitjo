@@ -528,7 +528,7 @@ function renderAll() {
 /* ---------- Events ---------- */
 function bind() {
   // top bar
-  $("#langToggle").onclick = () => { state.lang = state.lang === "en" ? "ar" : "en"; persist(); state.view === "detail" ? (renderAll(), renderDetail(state.currentGym)) : renderAll(); };
+  $("#langToggle").onclick = () => { state.lang = state.lang === "en" ? "ar" : "en"; persist(); window.dispatchEvent(new Event("fj:langchange")); state.view === "detail" ? (renderAll(), renderDetail(state.currentGym)) : renderAll(); };
   $("#themeToggle").onclick = () => { state.theme = state.theme === "light" ? "dark" : "light"; persist(); applyChrome(); renderControls(); };
   $("#currencySel").onchange = (e) => { state.currency = e.target.value; persist(); state.view === "detail" ? renderDetail(state.currentGym) : renderAll(); };
   $("#accentPicker").addEventListener("click", (e) => {
@@ -656,6 +656,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (state.view !== "detail") renderResults();
     renderFilters();
   }
-  setInterval(pollGyms, 15000);            // ~every 15s
+  setInterval(pollGyms, 6000);             // ~every 6s so admin edits show up quickly
   document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") pollGyms(); });
 });

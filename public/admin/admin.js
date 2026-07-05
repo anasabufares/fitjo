@@ -398,13 +398,29 @@ async function persist(okMsg) {
     });
     if (r.status === 401) { relock("Wrong admin password — try again."); return; }
     const j = await r.json().catch(() => ({}));
-    if (r.ok && j.ok) { cloudOnline = true; toast(okMsg + " — published to everyone ✓"); }
+    if (r.ok && j.ok) { cloudOnline = true; toast(okMsg + " — published to everyone ✓"); markPublished(); }
     else toast("Save failed: " + (j.error || ("HTTP " + r.status)), true);
   } catch (e) {
     cloudOnline = false;
     checkCloud();
     toast("Save failed — cloud not reachable. Is the site deployed on Netlify?", true);
   }
+}
+
+/* Show when the list was last published to everyone. */
+function markPublished() {
+  const el = $("#publishStatus"); if (!el) return;
+  const time = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  el.textContent = "Published ✓ " + time;
+}
+
+/* Manual "Update all" — re-publish the entire current list (every add & removal) at once. */
+async function publishAll() {
+  const btn = $("#publishBtn");
+  const prev = btn ? btn.textContent : "";
+  if (btn) { btn.disabled = true; btn.textContent = "Publishing…"; }
+  await persist(`Updated ${gyms.length} gym${gyms.length === 1 ? "" : "s"}`);
+  if (btn) { btn.disabled = false; btn.textContent = prev || "⟳ Update all"; }
 }
 
 /* ---- Download the current gyms as a data.js block (handy to refresh the built-in seed). ---- */
@@ -754,6 +770,7 @@ async function startDashboard() {
   $("#themeBtn").onclick = toggleTheme;
   const so = $("#signOutBtn"); if (so) so.onclick = () => relock("");
   $("#backupBtn").onclick = downloadBackup;
+  const pb = $("#publishBtn"); if (pb) pb.onclick = publishAll;
   $("#addBtn").onclick = () => openEditor(-1);
   $("#edClose").onclick = closeEditor;
   $("#edCancel").onclick = closeEditor;

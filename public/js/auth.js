@@ -655,7 +655,7 @@ function setPref(kind, value) {
   if (kind === "accent") state.accent = value;
   if (kind === "lang") state.lang = value;
   persist(); applyChrome(); renderControls();
-  if (kind === "lang") { renderStaticText(); renderFilters(); renderResults(); renderAuthView(); }
+  if (kind === "lang") { window.dispatchEvent(new Event("fj:langchange")); renderStaticText(); renderFilters(); renderResults(); renderAuthView(); }
   else reRenderSection();
 }
 
