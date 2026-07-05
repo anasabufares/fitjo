@@ -1006,6 +1006,13 @@ const FEAT_I18N = {
     myProgress: "My progress", weightTracker: "Weight tracker", addWeight: "Log",
     currentWeight: "Current", startWeight: "Start", change: "Change", weightKg: "Weight (kg)",
     noWeights: "Log your first weight to start tracking your progress.",
+    nearMe: "Near me", viewList: "List", viewMap: "Map", km: "km",
+    sortNearest: "Nearest first",
+    locating: "Finding your location…",
+    geoDenied: "Couldn't get your location — check location permission.",
+    geoUnsupported: "Location isn't supported on this device.",
+    youAreHere: "You are here", mapOffline: "The map needs an internet connection.",
+    nearMeOn: "Sorted by distance",
   },
   ar: {
     open247: "مفتوح 24/7", h247: "24/7", filter247: "المفتوحة 24/7 فقط", hours247short: "24 ساعة",
@@ -1018,6 +1025,13 @@ const FEAT_I18N = {
     myProgress: "تقدّمي", weightTracker: "متتبّع الوزن", addWeight: "تسجيل",
     currentWeight: "الحالي", startWeight: "البداية", change: "التغيّر", weightKg: "الوزن (كغ)",
     noWeights: "سجّل وزنك الأول لتبدأ بتتبّع تقدّمك.",
+    nearMe: "قربي", viewList: "قائمة", viewMap: "خريطة", km: "كم",
+    sortNearest: "الأقرب أولاً",
+    locating: "جارٍ تحديد موقعك…",
+    geoDenied: "تعذّر تحديد موقعك — تحقّق من إذن الموقع.",
+    geoUnsupported: "تحديد الموقع غير مدعوم على هذا الجهاز.",
+    youAreHere: "أنت هنا", mapOffline: "تحتاج الخريطة إلى اتصال بالإنترنت.",
+    nearMeOn: "مرتّب حسب المسافة",
   },
 };
 Object.assign(I18N.en, FEAT_I18N.en);

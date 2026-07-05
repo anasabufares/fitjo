@@ -119,9 +119,17 @@
               <button class="tab active" id="tabAll">All gyms</button>
               <button class="tab" id="tabFav">Favorites</button>
             </div>
+            <div class="results-tools">
+              <button class="near-btn" id="nearMeBtn" type="button">📍 <span id="nearMeLbl">Near me</span></button>
+              <div class="view-toggle">
+                <button data-view="list" id="viewListBtn" class="active" type="button">☰ <span id="viewListLbl">List</span></button>
+                <button data-view="map" id="viewMapBtn" type="button">🗺️ <span id="viewMapLbl">Map</span></button>
+              </div>
+            </div>
             <span class="count" id="resultCount"></span>
           </div>
           <div class="grid" id="grid" style="display:grid"></div>
+          <div id="mapWrap" style="display:none"><div id="map"></div></div>
         </div>
 
         <!-- DETAIL VIEW -->
@@ -170,5 +178,6 @@
   <script src="js/inbody.js"></script>
   <script src="js/supplements.js"></script>
   <script src="js/staff.js"></script>
+  <script src="js/map.js"></script>
 </body>
 </html>

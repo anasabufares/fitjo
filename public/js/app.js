@@ -11,6 +11,8 @@ const state = {
   favorites: JSON.parse(localStorage.getItem("fj_favs") || "[]"),
   tab: "all",             // all | favorites
   view: "list",           // list | detail
+  viewMode: localStorage.getItem("fj_view") || "list",   // list | map (results display)
+  geo: null,              // { lat, lng } once the user shares their location
   currentGym: null,
   compare: [],            // gym ids selected for comparison (max 3)
   filtersOpen: (localStorage.getItem("fj_filtersOpen") ?? (window.innerWidth > 860 ? "true" : "false")) === "true",
@@ -54,6 +56,7 @@ function persist() {
   localStorage.setItem("fj_unit", state.unit);
   localStorage.setItem("fj_favs", JSON.stringify(state.favorites));
   localStorage.setItem("fj_filtersOpen", String(state.filtersOpen));
+  localStorage.setItem("fj_view", state.viewMode);
 }
 function activeFilterCount() {
   const f = state.filters; let n = 0;
@@ -122,6 +125,13 @@ function filteredGyms() {
   if (f.sort === "rating") list.sort((a, b) => b.rating - a.rating);
   if (f.sort === "priceLow") list.sort((a, b) => monthlyJOD(a) - monthlyJOD(b));
   if (f.sort === "priceHigh") list.sort((a, b) => monthlyJOD(b) - monthlyJOD(a));
+  if (f.sort === "nearest") {
+    if (state.geo && typeof gymDistanceKm === "function") {
+      list.sort((a, b) => (gymDistanceKm(a) ?? Infinity) - (gymDistanceKm(b) ?? Infinity));
+    } else {
+      list.sort((a, b) => b.rating - a.rating);   // no location yet — fall back to top-rated
+    }
+  }
   return list;
 }
 
@@ -215,7 +225,7 @@ function renderFilters() {
 
   // sort
   const sortSel = $("#sortSel");
-  sortSel.innerHTML = [["rating", t("sortRating")], ["priceLow", t("sortPriceLow")], ["priceHigh", t("sortPriceHigh")]]
+  sortSel.innerHTML = [["rating", t("sortRating")], ["priceLow", t("sortPriceLow")], ["priceHigh", t("sortPriceHigh")], ["nearest", t("sortNearest")]]
     .map(([k, l]) => `<option value="${k}">${l}</option>`).join("");
   sortSel.value = f.sort;
 }
@@ -229,13 +239,47 @@ function renderResults() {
 
   const list = filteredGyms();
   $("#resultCount").textContent = `${list.length} ${t("resultsFound")}`;
+  updateTools();
 
-  const grid = $("#grid");
+  const isMap = state.viewMode === "map";
+  const grid = $("#grid"), mapWrap = $("#mapWrap");
+  if (grid) grid.style.display = isMap ? "none" : "grid";
+  if (mapWrap) mapWrap.style.display = isMap ? "block" : "none";
+
+  if (isMap) {
+    if (typeof renderMap === "function") renderMap(list);
+    return;
+  }
   if (!list.length) {
     grid.innerHTML = `<div class="empty">${state.tab === "favorites" && !state.favorites.length ? t("favEmpty") : t("noResults")}</div>`;
     return;
   }
   grid.innerHTML = list.map(cardHTML).join("");
+}
+
+/* ---------- Results tools: List/Map toggle + Near-me button ---------- */
+function updateTools() {
+  const nb = $("#nearMeBtn");
+  if (nb) {
+    const lbl = $("#nearMeLbl"); if (lbl) lbl.textContent = t("nearMe");
+    nb.classList.toggle("active", state.filters.sort === "nearest" && !!state.geo);
+  }
+  const vl = $("#viewListBtn"), vm = $("#viewMapBtn");
+  if (vl) { const l = $("#viewListLbl"); if (l) l.textContent = t("viewList"); vl.classList.toggle("active", state.viewMode === "list"); }
+  if (vm) { const l = $("#viewMapLbl"); if (l) l.textContent = t("viewMap"); vm.classList.toggle("active", state.viewMode === "map"); }
+}
+function setViewMode(m) {
+  state.viewMode = m; persist();
+  if (state.view === "detail") showList();
+  renderResults();
+}
+/* Ask for location, then sort by distance and refresh (map re-centres on the user). */
+function requestNearMe() {
+  state.filters.sort = "nearest";
+  const apply = () => { renderFilters(); renderResults(); if (state.viewMode === "map" && typeof centerOnUser === "function") centerOnUser(); };
+  const fail = () => { if (state.filters.sort === "nearest" && !state.geo) state.filters.sort = "rating"; renderFilters(); renderResults(); };
+  if (typeof requestGeo === "function") requestGeo(apply, fail);
+  else apply();
 }
 
 function cardHTML(g) {
@@ -257,7 +301,7 @@ function cardHTML(g) {
     </div>
     <div class="card-body">
       <div class="card-title">${g.name[state.lang]}</div>
-      <div class="card-meta">📍 ${g.area[state.lang]} <span class="rating">★ ${g.rating}</span> <span style="color:var(--muted)">(${g.reviews})</span></div>
+      <div class="card-meta">📍 ${g.area[state.lang]} <span class="rating">★ ${g.rating}</span> <span style="color:var(--muted)">(${g.reviews})</span>${typeof distanceBadge === "function" ? distanceBadge(g) : ""}</div>
       <div class="occ occ-${occ.level}"><span class="dot"></span>${t("busyNow")}: ${occLabel}</div>
       <div class="facil-row">${facils}</div>
       <button class="cmp-toggle ${inCmp ? "on" : ""}" data-cmp="${g.id}">${inCmp ? "✓ " + t("inCompare") : "⇄ " + t("addCompare")}</button>
@@ -512,7 +556,16 @@ function bind() {
   });
   $("#areaSel").onchange = (e) => { state.filters.area = e.target.value; afterFilterChange(); };
   $("#ageSel").onchange = (e) => { state.filters.minAge = Number(e.target.value); afterFilterChange(); };
-  $("#sortSel").onchange = (e) => { state.filters.sort = e.target.value; renderResults(); };
+  $("#sortSel").onchange = (e) => {
+    state.filters.sort = e.target.value;
+    if (e.target.value === "nearest" && !state.geo) return requestNearMe();
+    renderResults();
+  };
+
+  // near-me + list/map view toggle
+  const nearBtn = $("#nearMeBtn"); if (nearBtn) nearBtn.onclick = requestNearMe;
+  const vListBtn = $("#viewListBtn"); if (vListBtn) vListBtn.onclick = () => setViewMode("list");
+  const vMapBtn = $("#viewMapBtn"); if (vMapBtn) vMapBtn.onclick = () => setViewMode("map");
   $("#priceRange").addEventListener("input", (e) => { state.filters.maxPrice = Number(e.target.value); $("#priceVal").textContent = `${t("from")} — ${fmtPrice(state.filters.maxPrice)}${t("perMonth")}`; renderResults(); });
   $("#clearBtn").onclick = () => { state.filters = { q: "", area: "", facilities: [], pool: "any", access: "any", minAge: 0, maxPrice: 80, sort: "rating", open247: false }; showList(); renderAll(); };
 
