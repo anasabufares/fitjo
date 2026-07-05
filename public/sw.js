@@ -10,7 +10,7 @@
      • Cross-origin (Leaflet CDN, OpenStreetMap tiles) is left to the
        network; offline the map degrades to its built-in fallback.
    ============================================================= */
-const CACHE = "fitjo-cache-v1";
+const CACHE = "fitjo-cache-v2";
 
 const APP_SHELL = [
   "index.html", "manifest.json",
@@ -44,6 +44,9 @@ self.addEventListener("fetch", (event) => {
 
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;   // CDN / map tiles → straight to network
+
+  // Never cache dynamic data — cloud APIs & functions must always be fresh (live updates).
+  if (url.pathname.startsWith("/api/") || url.pathname.startsWith("/.netlify/")) return;
 
   // App navigations: try the network, fall back to the cached shell when offline.
   if (req.mode === "navigate") {
