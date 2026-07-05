@@ -22,7 +22,7 @@ const NUTR_I18N = {
     analyzing: "Analyzing your photo…",
     demoEstimate: "Demo estimate — adjust the amount or name, then add.",
     aiEstimate: "AI estimate — adjust if needed, then add.",
-    amount: "Amount (g)", food: "Food",
+    amount: "Amount", unit: "Unit", food: "Food",
     addToToday: "Add to today", discard: "Discard",
     eaten: "eaten", ofTarget: "of", left: "left over", over: "over",
     protein: "Protein", carbs: "Carbs", fat: "Fat",
@@ -38,7 +38,7 @@ const NUTR_I18N = {
     analyzing: "جارٍ تحليل صورتك…",
     demoEstimate: "تقدير تجريبي — عدّل الكمية أو الاسم ثم أضف.",
     aiEstimate: "تقدير بالذكاء الاصطناعي — عدّل عند الحاجة ثم أضف.",
-    amount: "الكمية (غ)", food: "الطعام",
+    amount: "الكمية", unit: "الوحدة", food: "الطعام",
     addToToday: "أضف لليوم", discard: "تجاهل",
     eaten: "مستهلك", ofTarget: "من", left: "متبقٍ", over: "زائد",
     protein: "بروتين", carbs: "كربوهيدرات", fat: "دهون",
@@ -127,6 +127,13 @@ const FOODS = [
   { name: { en: "Cola", ar: "كولا" }, kcal: 42, p: 0, c: 10.6, f: 0 },
   { name: { en: "Coffee (black)", ar: "قهوة سادة" }, kcal: 2, p: 0.1, c: 0, f: 0 },
   { name: { en: "Olive oil", ar: "زيت زيتون" }, kcal: 884, p: 0, c: 0, f: 100 },
+  // energy & sports drinks (per 100 ml)
+  { name: { en: "Red Bull", ar: "ريد بُل" }, kcal: 45, p: 0, c: 11, f: 0 },
+  { name: { en: "Monster Energy", ar: "مونستر" }, kcal: 47, p: 0, c: 12, f: 0 },
+  { name: { en: "Power Horse", ar: "باور هورس" }, kcal: 44, p: 0, c: 11, f: 0 },
+  { name: { en: "Energy drink (sugar-free)", ar: "مشروب طاقة بدون سكر" }, kcal: 3, p: 0, c: 1, f: 0 },
+  { name: { en: "Sports drink (Gatorade)", ar: "مشروب رياضي" }, kcal: 24, p: 0, c: 6, f: 0 },
+  { name: { en: "Pre-workout drink", ar: "مشروب قبل التمرين" }, kcal: 10, p: 0, c: 2, f: 0 },
 ];
 /* plausible full-meal guesses for the demo photo flow (per serving) */
 const DEMO_MEALS = [
@@ -138,8 +145,24 @@ const DEMO_MEALS = [
   { name: { en: "Greek salad & feta", ar: "سلطة يونانية وفيتا" }, kcal: 320, p: 12, c: 14, f: 24 },
 ];
 
+/* ---------- units (all convert to grams; per100 = per 100 g/ml) ---------- */
+const UNITS = [
+  { id: "g", grams: 1, label: { en: "grams (g)", ar: "غرام" } },
+  { id: "oz", grams: 28.3495, label: { en: "ounces (oz)", ar: "أونصة" } },
+  { id: "lb", grams: 453.592, label: { en: "pounds (lb)", ar: "باوند" } },
+  { id: "ml", grams: 1, label: { en: "milliliters (ml)", ar: "مليلتر" } },
+  { id: "cup", grams: 240, label: { en: "cup", ar: "كوب" } },
+  { id: "tbsp", grams: 15, label: { en: "tablespoon", ar: "ملعقة كبيرة" } },
+  { id: "tsp", grams: 5, label: { en: "teaspoon", ar: "ملعقة صغيرة" } },
+  { id: "piece", grams: 100, label: { en: "piece", ar: "قطعة" } },
+  { id: "serving", grams: 150, label: { en: "serving", ar: "حصة" } },
+];
+const unitGrams = (id) => (UNITS.find(u => u.id === id) || UNITS[0]).grams;
+const unitLabel = (id) => { const u = UNITS.find(x => x.id === id) || UNITS[0]; return u.label[state.lang] || u.label.en; };
+const unitShort = (id) => (state.lang === "ar" ? (UNITS.find(u => u.id === id) || UNITS[0]).label.ar : id);
+
 /* ---------- state ---------- */
-let pendingFood = null;   // { name, source, grams, per100:{kcal,p,c,f} }
+let pendingFood = null;   // { name, source, qty, unit, per100:{kcal,p,c,f} }
 let nutAnalyzing = false;
 
 /* ---------- helpers ---------- */
@@ -152,12 +175,18 @@ const todayKey = () => new Date().toDateString();
 function foodLog(u) { return (u.food && u.food.log) || []; }
 function entriesFor(u, key) { return foodLog(u).filter(e => dayKey(e.ts) === key); }
 function sumEntries(list) { return list.reduce((a, e) => ({ kcal: a.kcal + e.kcal, p: a.p + e.p, c: a.c + e.c, f: a.f + e.f }), { kcal: 0, p: 0, c: 0, f: 0 }); }
-function scaledFood(p) { const k = p.grams / 100; return { kcal: Math.round(p.per100.kcal * k), p: Math.round(p.per100.p * k), c: Math.round(p.per100.c * k), f: Math.round(p.per100.f * k) }; }
+function pendingGrams(p) { return Math.max(0, (parseFloat(p.qty) || 0) * unitGrams(p.unit)); }
+function scaledFood(p) { const k = pendingGrams(p) / 100; return { kcal: Math.round(p.per100.kcal * k), p: Math.round(p.per100.p * k), c: Math.round(p.per100.c * k), f: Math.round(p.per100.f * k) }; }
 function lookupFood(q) {
   const s = q.trim().toLowerCase();
   const f = FOODS.find(x => x.name.en.toLowerCase().includes(s) || (x.name.ar || "").includes(q.trim()));
-  if (f) return { name: f.name[state.lang], source: "lib", grams: 150, per100: { kcal: f.kcal, p: f.p, c: f.c, f: f.f } };
-  return { name: q.trim(), source: "manual", grams: 150, per100: { kcal: 150, p: 8, c: 15, f: 5 } };
+  if (f) return { name: f.name[state.lang], source: "lib", qty: 150, unit: "g", per100: { kcal: f.kcal, p: f.p, c: f.c, f: f.f } };
+  return { name: q.trim(), source: "manual", qty: 150, unit: "g", per100: { kcal: 150, p: 8, c: 15, f: 5 } };
+}
+/* a full-meal guess is one "serving"; store per100 so 1 serving shows the meal's values */
+function mealToPending(name, source, meal) {
+  const per = 100 / unitGrams("serving");   // serving = 150 g
+  return { name, source, qty: 1, unit: "serving", per100: { kcal: meal.kcal * per, p: meal.p * per, c: meal.c * per, f: meal.f * per } };
 }
 function fileToDataURL(file) {
   return new Promise((resolve, reject) => { const r = new FileReader(); r.onload = () => resolve(r.result); r.onerror = reject; r.readAsDataURL(file); });
@@ -196,10 +225,13 @@ function pendingCardHTML() {
   return `
   <div class="pending-food">
     <div class="pf-note">${p.source === "ai" ? t("aiEstimate") : t("demoEstimate")}</div>
-    <div class="form-two">
-      <div class="form-row"><label>${t("food")}</label><input id="foodName" value="${esc(p.name)}"></div>
-      <div class="form-row"><label>${t("amount")}</label><input id="foodGrams" type="number" min="1" max="2000" value="${p.grams}"></div>
+    <div class="form-row"><label>${t("food")}</label><input id="foodName" value="${esc(p.name)}"></div>
+    <div class="form-two" style="grid-template-columns:1fr 1.4fr">
+      <div class="form-row"><label>${t("amount")}</label><input id="foodQty" type="number" min="0" step="any" value="${p.qty}"></div>
+      <div class="form-row"><label>${t("unit")}</label>
+        <select id="foodUnit">${UNITS.map(u => `<option value="${u.id}" ${p.unit === u.id ? "selected" : ""}>${u.label[state.lang] || u.label.en}</option>`).join("")}</select></div>
     </div>
+    <div class="pf-sub">= ${Math.round(pendingGrams(p))} g</div>
     <div class="pf-macros">
       <span><b>${s.kcal}</b> ${t("kcal")}</span>
       <span>${t("protein")} <b>${s.p}g</b></span>
@@ -261,7 +293,7 @@ function secNutrition(u) {
     <h4>🍽️ ${t("today")}</h4>
     ${today.length ? today.slice().reverse().map(e => `
       <div class="food-row">
-        <div><b>${esc(e.name)}</b><div class="meal-items">${e.grams}g · ${t("protein")} ${e.p}g · ${t("carbs")} ${e.c}g · ${t("fat")} ${e.f}g</div></div>
+        <div><b>${esc(e.name)}</b><div class="meal-items">${e.qty != null && e.unit ? esc(e.qty + " " + unitShort(e.unit)) : (e.grams + "g")} · ${t("protein")} ${e.p}g · ${t("carbs")} ${e.c}g · ${t("fat")} ${e.f}g</div></div>
         <span class="meal-kcal">${e.kcal} ${t("kcal")} <button class="auth-link" data-rmfood="${e.id}" title="remove" style="margin-inline-start:6px">✕</button></span>
       </div>`).join("") : `<div class="note">${t("noFoodToday")}</div>`}
   </div>
@@ -283,12 +315,12 @@ async function analyzePhoto(file) {
         const j = await res.json();
         if (j && Array.isArray(j.items) && j.items.length) {
           const sum = j.items.reduce((a, x) => ({ kcal: a.kcal + (+x.kcal || 0), p: a.p + (+x.protein || 0), c: a.c + (+x.carbs || 0), f: a.f + (+x.fat || 0) }), { kcal: 0, p: 0, c: 0, f: 0 });
-          item = { name: j.items.map(x => x.name).filter(Boolean).join(", ") || "Meal", source: "ai", grams: 100, per100: { kcal: sum.kcal, p: sum.p, c: sum.c, f: sum.f } };
+          item = mealToPending(j.items.map(x => x.name).filter(Boolean).join(", ") || "Meal", "ai", sum);
         }
       }
     }
   } catch (e) { /* fall back to demo */ }
-  if (!item) { const m = DEMO_MEALS[Math.floor(Math.random() * DEMO_MEALS.length)]; item = { name: m.name[state.lang], source: "demo", grams: 100, per100: { kcal: m.kcal, p: m.p, c: m.c, f: m.f } }; }
+  if (!item) { const m = DEMO_MEALS[Math.floor(Math.random() * DEMO_MEALS.length)]; item = mealToPending(m.name[state.lang], "demo", m); }
   nutAnalyzing = false; pendingFood = item; reRenderSection();
 }
 
@@ -305,10 +337,11 @@ function handleNutritionClick(e) {
   if (hit("#addFoodConfirm")) {
     if (!pendingFood) return true;
     const name = ((val("foodName") || pendingFood.name).trim()) || pendingFood.name;
-    const grams = Math.max(1, Math.min(2000, parseInt(val("foodGrams"), 10) || pendingFood.grams));
-    pendingFood.grams = grams;
+    const qty = Math.max(0, parseFloat(val("foodQty")) || pendingFood.qty);
+    const unit = val("foodUnit") || pendingFood.unit;
+    pendingFood.qty = qty; pendingFood.unit = unit;
     const s = scaledFood(pendingFood);
-    const entry = { id: "f" + Date.now(), ts: Date.now(), name, grams, kcal: s.kcal, p: s.p, c: s.c, f: s.f };
+    const entry = { id: "f" + Date.now(), ts: Date.now(), name, qty, unit, grams: Math.round(pendingGrams(pendingFood)), kcal: s.kcal, p: s.p, c: s.c, f: s.f };
     const food = { log: [...foodLog(currentUser()), entry] };
     updateUser({ food });
     pendingFood = null; reRenderSection(); toast(t("saved"));
@@ -329,11 +362,13 @@ function handleNutritionChange(e) {
     if (file) analyzePhoto(file);
     return true;
   }
-  if (e.target.id === "foodGrams" && pendingFood) {
-    pendingFood.grams = Math.max(1, Math.min(2000, parseInt(e.target.value, 10) || pendingFood.grams));
+  if (e.target.id === "foodQty" && pendingFood) {
+    const v = parseFloat(e.target.value);
+    pendingFood.qty = isNaN(v) ? 0 : Math.max(0, v);
     reRenderSection();
     return true;
   }
+  if (e.target.id === "foodUnit" && pendingFood) { pendingFood.unit = e.target.value; reRenderSection(); return true; }
   if (e.target.id === "foodName" && pendingFood) { pendingFood.name = e.target.value; return true; }
   return false;
 }
