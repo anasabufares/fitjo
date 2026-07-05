@@ -29,9 +29,13 @@ export default async (req) => {
   try { body = await req.json(); } catch { body = {}; }
 
   // ---- Coach: read only members who opted in to trainer contact ----
+  // A coach passes either the master COACH_PASSWORD env var OR any passkey the
+  // gym owner generated in the admin (stored in the "coach_codes" blob).
   if (coachPw != null && coachPw !== "") {
-    if (!process.env.COACH_PASSWORD) return json({ ok: false, error: "COACH_PASSWORD is not set in Netlify." }, 500);
-    if (coachPw !== process.env.COACH_PASSWORD) return json({ ok: false, error: "Wrong coach code." }, 401);
+    const codes = (await store.get("coach_codes", { type: "json" })) || [];
+    const master = process.env.COACH_PASSWORD;
+    const valid = (master && coachPw === master) || codes.some(c => c.code === coachPw);
+    if (!valid) return json({ ok: false, error: "Wrong coach code." }, 401);
     const list = (await store.get(KEY, { type: "json" })) || [];
     const opted = list.filter(m => m.trainerContact).map(m => ({
       name: m.name, phone: m.phone, goal: m.goal, city: m.city,
@@ -52,6 +56,25 @@ export default async (req) => {
       const next = list.filter(m => m.email !== email);
       await store.setJSON(KEY, next);
       return json({ ok: true, count: next.length });
+    }
+    // ---- Coach passkeys (owner generates / lists / revokes) ----
+    if (body.action === "coach-codes") {
+      const codes = (await store.get("coach_codes", { type: "json" })) || [];
+      return json({ codes });
+    }
+    if (body.action === "coach-code-add") {
+      const codes = (await store.get("coach_codes", { type: "json" })) || [];
+      const rnd = () => Math.random().toString(36).slice(2, 6).toUpperCase();
+      const code = `CX-${rnd()}-${rnd()}`;
+      codes.push({ code, label: String(body.label || "").slice(0, 40), createdAt: Date.now() });
+      await store.setJSON("coach_codes", codes);
+      return json({ ok: true, code, codes });
+    }
+    if (body.action === "coach-code-del") {
+      let codes = (await store.get("coach_codes", { type: "json" })) || [];
+      codes = codes.filter(c => c.code !== body.code);
+      await store.setJSON("coach_codes", codes);
+      return json({ ok: true, codes });
     }
     return json({ ok: false, error: "Unknown admin action." }, 400);
   }

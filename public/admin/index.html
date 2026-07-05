@@ -51,6 +51,7 @@
       <div class="admin-tabs">
         <button class="atab active" data-view="gyms">🏋️ Gyms</button>
         <button class="atab" data-view="members">👥 Members</button>
+        <button class="atab" data-view="coaches">🧑‍🏫 Coaches</button>
       </div>
 
       <div id="gymsView">
@@ -62,11 +63,28 @@
         <button class="add-card" id="addBtn">＋ Add a gym</button>
       </div>
 
+      <div id="coachesView" style="display:none">
+        <div class="admin-head">
+          <h1>Coach passkeys</h1>
+          <span class="count" id="coachCount"></span>
+        </div>
+        <div class="banner" style="border-color:var(--border);background:var(--surface-2);color:var(--muted)">
+          Generate a passkey for each coach. They sign in via <b>Gym staff → Coach</b> with the code
+          to see members who allowed trainer contact. Revoke anytime.
+        </div>
+        <div class="cc-gen">
+          <input id="coachLabel" class="member-search" placeholder="Coach name / label (optional)" />
+          <button class="abtn" id="genCoach">＋ Generate passkey</button>
+        </div>
+        <div class="coach-codes" id="coachCodesList"></div>
+      </div>
+
       <div id="membersView" style="display:none">
         <div class="admin-head">
           <h1>Members</h1>
           <span class="count" id="memberCount"></span>
           <span class="admin-spacer"></span>
+          <button class="abtn sm" id="addMemberBtn">＋ Add member</button>
           <select id="memberSort" class="member-search" style="min-width:auto">
             <option value="new">Newest first</option>
             <option value="old">Oldest first</option>
@@ -93,6 +111,32 @@
       <div class="ed-foot">
         <button class="abtn ghost" id="edCancel">Cancel</button>
         <button class="abtn" id="edSave">Save gym</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add member modal -->
+  <div class="ed-back" id="addMemberBack">
+    <div class="ed-modal" style="max-width:480px">
+      <header>
+        <h2>Add a member</h2>
+        <button class="iconbtn" id="addMemberClose" aria-label="Close">✕</button>
+      </header>
+      <div class="ed-body">
+        <div class="fld"><label>Full name</label><input id="amName" placeholder="Sara Ahmad"></div>
+        <div class="fld"><label>Email</label><input id="amEmail" type="email" placeholder="sara@email.com"></div>
+        <div class="grid2">
+          <div class="fld"><label>Phone</label><input id="amPhone" placeholder="+962 7X XXX XXXX"></div>
+          <div class="fld"><label>Age</label><input id="amAge" type="number" min="12" max="100" placeholder="25"></div>
+        </div>
+        <div class="grid2">
+          <div class="fld"><label>Goal</label><input id="amGoal" placeholder="lose / build / fit"></div>
+          <div class="fld"><label>City</label><input id="amCity" placeholder="Amman"></div>
+        </div>
+      </div>
+      <div class="ed-foot">
+        <button class="abtn ghost" id="addMemberCancel">Cancel</button>
+        <button class="abtn" id="addMemberSave">Add member</button>
       </div>
     </div>
   </div>

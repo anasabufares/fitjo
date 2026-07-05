@@ -123,6 +123,17 @@
 .member-info .sub { color: var(--muted); font-size: 13px; margin-top: 1px; word-break: break-all; }
 .member-meta { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
 .muted-note { color: var(--muted); padding: 24px; text-align: center; font-size: 14px; }
+
+/* ---- Coach passkeys ---- */
+.cc-gen { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+.cc-gen .member-search { flex: 1; min-width: 180px; }
+.coach-codes { display: grid; gap: 10px; }
+.cc-row { display: flex; align-items: center; gap: 14px; background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 12px 14px; box-shadow: var(--shadow); }
+.cc-info { flex: 1; min-width: 0; }
+.cc-code { font-family: ui-monospace, "Cascadia Code", Menlo, Consolas, monospace; font-weight: 800; font-size: 16px; letter-spacing: 1px; }
+.cc-label { color: var(--muted); font-size: 12.5px; margin-top: 2px; }
+.cc-row .acts { display: flex; gap: 6px; flex: none; }
 .member-search {
   border: 1px solid var(--border); background: var(--surface-2); color: var(--text);
   border-radius: 10px; padding: 7px 11px; font-size: 13px; min-width: 200px; font-family: inherit;

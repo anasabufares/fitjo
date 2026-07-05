@@ -15,10 +15,11 @@ let gyms = clone(typeof GYMS !== "undefined" ? GYMS : []);   // built-in list = 
 let editingIndex = -1;      // index in `gyms`, or -1 for a new gym
 let cloudOnline = false;    // is the Netlify function reachable?
 let adminPw = sessionStorage.getItem("fj_admin_pw") || "";   // the admin password (this session)
-let view = "gyms";          // "gyms" | "members"
+let view = "gyms";          // "gyms" | "members" | "coaches"
 let members = null;         // loaded member list (null = not loaded yet)
 let memberFilter = "";      // Members search box
 let memberSort = "new";     // new | old | name | saved
+let coachCodes = null;      // loaded coach passkeys (null = not loaded)
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
@@ -427,7 +428,63 @@ function switchView(v) {
   $$(".atab").forEach(b => b.classList.toggle("active", b.dataset.view === v));
   $("#gymsView").style.display = v === "gyms" ? "" : "none";
   $("#membersView").style.display = v === "members" ? "" : "none";
+  $("#coachesView").style.display = v === "coaches" ? "" : "none";
   if (v === "members" && members === null) loadMembers();
+  if (v === "coaches" && coachCodes === null) loadCoachCodes();
+}
+
+/* ---------- Coach passkeys ---------- */
+async function coachAction(payload) {
+  const r = await fetch(API_MEMBERS, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "x-admin-password": adminPw },
+    body: JSON.stringify(payload),
+  });
+  if (r.status === 401) { relock("Wrong admin password — try again."); return null; }
+  return r.json().catch(() => ({}));
+}
+async function loadCoachCodes() {
+  const list = $("#coachCodesList");
+  list.innerHTML = `<div class="muted-note">Loading…</div>`;
+  try {
+    const j = await coachAction({ action: "coach-codes" });
+    if (j && Array.isArray(j.codes)) { coachCodes = j.codes; renderCoachCodes(); }
+    else if (j) list.innerHTML = `<div class="muted-note">Couldn't load: ${escAttr(j.error || "error")}</div>`;
+  } catch (e) { list.innerHTML = `<div class="muted-note">Cloud not reachable — coach passkeys work on the deployed Netlify site.</div>`; }
+}
+function renderCoachCodes() {
+  const arr = (coachCodes || []).slice().sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  $("#coachCount").textContent = `${arr.length} passkey${arr.length === 1 ? "" : "s"}`;
+  const list = $("#coachCodesList");
+  if (!arr.length) { list.innerHTML = `<div class="muted-note">No passkeys yet. Generate one above for each coach.</div>`; return; }
+  list.innerHTML = arr.map(c => `
+    <div class="cc-row">
+      <div class="cc-info">
+        <div class="cc-code">${escAttr(c.code)}</div>
+        <div class="cc-label">${escAttr(c.label || "Coach")} · ${fmtWhen(c.createdAt)}</div>
+      </div>
+      <div class="acts">
+        <button class="abtn ghost sm" data-copycode="${escAttr(c.code)}">Copy</button>
+        <button class="abtn danger sm" data-delcode="${escAttr(c.code)}">Revoke</button>
+      </div>
+    </div>`).join("");
+  $$("[data-copycode]", list).forEach(b => b.onclick = () => copyCoachCode(b.dataset.copycode));
+  $$("[data-delcode]", list).forEach(b => b.onclick = () => revokeCoachCode(b.dataset.delcode));
+}
+async function generateCoachCode() {
+  const label = ($("#coachLabel").value || "").trim();
+  const j = await coachAction({ action: "coach-code-add", label });
+  if (j && j.ok) { coachCodes = j.codes; $("#coachLabel").value = ""; renderCoachCodes(); toast(`Passkey generated: ${j.code}`); }
+  else if (j) toast("Failed: " + (j.error || "error"), true);
+}
+async function revokeCoachCode(code) {
+  if (!confirm(`Revoke passkey ${code}? The coach using it will lose access.`)) return;
+  const j = await coachAction({ action: "coach-code-del", code });
+  if (j && j.ok) { coachCodes = j.codes; renderCoachCodes(); toast("Passkey revoked"); }
+}
+function copyCoachCode(code) {
+  try { navigator.clipboard.writeText(code); toast("Copied " + code); }
+  catch (e) { toast(code); }
 }
 
 async function loadMembers() {
@@ -541,6 +598,29 @@ function exportMembersCSV() {
   toast(`Exported ${arr.length} members`);
 }
 
+function openAddMember() {
+  ["amName", "amEmail", "amPhone", "amAge", "amGoal", "amCity"].forEach(id => { const el = $("#" + id); if (el) el.value = ""; });
+  $("#addMemberBack").classList.add("show");
+}
+function closeAddMember() { $("#addMemberBack").classList.remove("show"); }
+async function saveNewMember() {
+  const name = $("#amName").value.trim();
+  const email = $("#amEmail").value.trim().toLowerCase();
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { toast("Enter a valid email", true); return; }
+  const payload = {
+    name, email, phone: $("#amPhone").value.trim(),
+    age: parseInt($("#amAge").value, 10) || null,
+    goal: $("#amGoal").value.trim(), city: $("#amCity").value.trim(),
+  };
+  try {
+    // register endpoint (no admin header) upserts the member by email
+    const r = await fetch(API_MEMBERS, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+    const j = await r.json().catch(() => ({}));
+    if (r.ok && j.ok) { closeAddMember(); members = null; loadMembers(); toast("Member added"); }
+    else toast("Failed: " + (j.error || ("HTTP " + r.status)), true);
+  } catch (e) { toast("Cloud not reachable — add members on the deployed Netlify site.", true); }
+}
+
 async function deleteMember(email) {
   if (!confirm(`Remove member "${email}" from the list?`)) return;
   try {
@@ -568,6 +648,12 @@ async function startDashboard() {
   const ms = $("#memberSearch"); if (ms) ms.oninput = () => { memberFilter = ms.value; if (members) renderMembers(); };
   const mso = $("#memberSort"); if (mso) mso.onchange = () => { memberSort = mso.value; if (members) renderMembers(); };
   const ex = $("#exportMembers"); if (ex) ex.onclick = exportMembersCSV;
+  const gc = $("#genCoach"); if (gc) gc.onclick = generateCoachCode;
+  const amb = $("#addMemberBtn"); if (amb) amb.onclick = openAddMember;
+  const amc = $("#addMemberClose"); if (amc) amc.onclick = closeAddMember;
+  const amx = $("#addMemberCancel"); if (amx) amx.onclick = closeAddMember;
+  const ams = $("#addMemberSave"); if (ams) ams.onclick = saveNewMember;
+  $("#addMemberBack").addEventListener("click", (e) => { if (e.target === $("#addMemberBack")) closeAddMember(); });
   const mc = $("#memberClose"); if (mc) mc.onclick = closeMemberDetail;
   $("#memberBack").addEventListener("click", (e) => { if (e.target === $("#memberBack")) closeMemberDetail(); });
   loadMembers();   // load in the background so the stats bar shows member counts
