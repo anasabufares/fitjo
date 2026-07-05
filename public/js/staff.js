@@ -7,6 +7,7 @@
    ============================================================= */
 
 let coachMembers = [];
+let coachName = "";
 
 async function enterCoachPortal(code) {
   try {
@@ -19,6 +20,7 @@ async function enterCoachPortal(code) {
     const j = await r.json().catch(() => ({}));
     if (!Array.isArray(j.members)) { showErr(j.error || tL("Couldn't open the coach portal.", "تعذّر فتح بوابة المدرب.")); return; }
     coachMembers = j.members;
+    coachName = j.coach || "";
     sessionStorage.setItem("fj_coach_pw", code);
     if (typeof closeAuth === "function") closeAuth();
     showCoachPortal();
@@ -55,7 +57,7 @@ function showCoachPortal() {
   const arr = coachMembers || [];
   el.innerHTML = `
     <div class="cp-top">
-      <div class="admin-brand"><span class="logo">🧑‍🏫</span><span>FitJo<small>${tL("Coach portal", "بوابة المدرب")}</small></span></div>
+      <div class="admin-brand"><span class="logo">🧑‍🏫</span><span>FitJo<small>${tL("Coach portal", "بوابة المدرب")}${coachName ? " · " + esc(coachName) : ""}</small></span></div>
       <span style="flex:1"></span>
       <button class="abtn ghost sm" id="coachRefresh">↻</button>
       <button class="abtn ghost sm" id="coachOut">${tL("Sign out", "خروج")}</button>

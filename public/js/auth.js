@@ -244,7 +244,7 @@ function switchSection(sec) {
   document.getElementById("acctBody").innerHTML = sectionHTML(sec);
   document.querySelectorAll(".acct-nav [data-sec]").forEach(b => b.classList.toggle("active", b.dataset.sec === sec));
 }
-function reRenderSection() { document.getElementById("acctBody").innerHTML = sectionHTML(acctSection); }
+function reRenderSection() { const b = document.getElementById("acctBody"); if (b) b.innerHTML = sectionHTML(acctSection); }
 
 /* ---------- sections ---------- */
 const isPro = (u) => !!(u && u.pro);

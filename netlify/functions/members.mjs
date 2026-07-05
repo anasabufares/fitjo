@@ -34,14 +34,15 @@ export default async (req) => {
   if (coachPw != null && coachPw !== "") {
     const codes = (await store.get("coach_codes", { type: "json" })) || [];
     const master = process.env.COACH_PASSWORD;
-    const valid = (master && coachPw === master) || codes.some(c => c.code === coachPw);
+    const match = codes.find(c => c.code === coachPw);
+    const valid = (master && coachPw === master) || !!match;
     if (!valid) return json({ ok: false, error: "Wrong coach code." }, 401);
     const list = (await store.get(KEY, { type: "json" })) || [];
     const opted = list.filter(m => m.trainerContact).map(m => ({
       name: m.name, phone: m.phone, goal: m.goal, city: m.city,
       favorites: m.favorites, points: m.points, hasPlan: m.hasPlan,
     }));
-    return json({ members: opted });
+    return json({ members: opted, coach: match && match.label ? match.label : "" });
   }
 
   // ---- Admin actions (password required) ----

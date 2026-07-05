@@ -163,11 +163,31 @@ function handleMembershipClick(e) {
   const rd = hit("[data-redeem]"); if (rd) { redeemReward(rd.dataset.redeem); return true; }
   return false;
 }
+async function photoCheckin(file, g) {
+  toast(tL("Checking your photo…", "جارٍ فحص صورتك…"));
+  try {
+    const dataUrl = await fileToDataURL(file);   // fileToDataURL is defined in nutrition.js
+    const base64 = String(dataUrl).split(",")[1];
+    const r = await fetch("/.netlify/functions/verify-gym", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ image_base64: base64, mime: file.type }),
+    });
+    if (r.ok) {
+      const j = await r.json();
+      if (j && typeof j.inGym === "boolean") {
+        if (j.inGym) awardCheckin("photo", g.id);
+        else toast(tL("That photo doesn't look like a gym — check in from inside.", "الصورة لا تبدو داخل نادٍ — سجّل من الداخل."), true);
+        return;
+      }
+    }
+  } catch (e) { /* fall through to demo */ }
+  awardCheckin("photo", g.id);   // demo fallback when AI isn't configured
+}
 function handleMembershipChange(e) {
   if (e.target.id === "checkinPhoto") {
     const u = currentUser(), g = memGym(u);
     if (!subActive(u) || !g) { toast(tL("Subscribe to a gym first", "اشترك في نادٍ أولاً")); return true; }
-    if (e.target.files && e.target.files[0]) awardCheckin("photo", g.id);
+    if (e.target.files && e.target.files[0]) photoCheckin(e.target.files[0], g);
     return true;
   }
   return false;

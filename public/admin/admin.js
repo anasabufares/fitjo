@@ -239,6 +239,12 @@ function buildForm(g) {
       ${fld("Friday", "hours_friday", g.hours?.friday, { hint: 'e.g. 10:00 AM – 10:00 PM or "Closed"' })}
     </div>
 
+    <div class="ed-section">Location (for check-in)</div>
+    <div class="grid2">
+      ${fld("Latitude", "lat", g.coords?.lat, { type: "number", step: "any", hint: "e.g. 31.9454 — leave blank to use the area" })}
+      ${fld("Longitude", "lng", g.coords?.lng, { type: "number", step: "any", hint: "e.g. 35.8875" })}
+    </div>
+
     <div id="poolWrap" style="${g.pool ? "" : "display:none"}">
       <div class="ed-section">Pool schedule</div>
       <div class="grid2">
@@ -347,6 +353,7 @@ function readForm() {
     pool,
     poolHours: pool ? { women: v("pool_women"), men: v("pool_men") } : null,
     hours: { weekdays: v("hours_weekdays"), friday: v("hours_friday") },
+    coords: (v("lat") && v("lng")) ? { lat: parseFloat(v("lat")), lng: parseFloat(v("lng")) } : null,
     facilities, trainers, plans, offers,
     open247: $('[data-f="open247"]').checked,
   };
