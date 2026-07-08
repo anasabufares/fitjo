@@ -13,14 +13,29 @@ const STREAK_CAP = 7;        // max streak days that add bonus (15 + 7*5 = 50/da
 const MISS_PENALTY = 5;      // lost per missed day while subscribed
 let pendingSubGym = null;    // gym preselected from a gym's "Subscribe" button
 
+/* Rewards worth chasing — tiered from everyday perks to big-ticket gear.
+   valueJod = real-world worth (shown in the user's currency so the points
+   feel like real money). tier: 1 everyday · 2 worth working for · 3 big goals. */
 const REWARDS = [
-  { id: "r1", icon: "🥤", name: { en: "Free protein shake", ar: "شيك بروتين مجاني" }, cost: 80 },
-  { id: "r2", icon: "🏋️", name: { en: "Free personal-training session", ar: "جلسة تدريب شخصي مجانية" }, cost: 200 },
-  { id: "r3", icon: "👟", name: { en: "20% off sportswear shop", ar: "خصم 20% على متجر الرياضة" }, cost: 120 },
-  { id: "r4", icon: "🎟️", name: { en: "Free day pass for a friend", ar: "دخول يوم مجاني لصديق" }, cost: 60 },
-  { id: "r5", icon: "🧴", name: { en: "Free gym towel", ar: "منشفة نادي مجانية" }, cost: 40 },
-  { id: "r6", icon: "💊", name: { en: "15% off supplements", ar: "خصم 15% على المكملات" }, cost: 100 },
+  // tier 1 — everyday perks (a week or two of check-ins)
+  { id: "r1", icon: "🥤", name: { en: "Free protein shake", ar: "شيك بروتين مجاني" }, cost: 150, valueJod: 4, tier: 1 },
+  { id: "r2", icon: "🧴", name: { en: "FitJo gym towel", ar: "منشفة FitJo" }, cost: 250, valueJod: 8, tier: 1 },
+  { id: "r3", icon: "🎟️", name: { en: "Bring-a-friend day pass", ar: "دخول يوم لصديق" }, cost: 350, valueJod: 12, tier: 1 },
+  // tier 2 — worth working for (about a month)
+  { id: "r4", icon: "💊", name: { en: "25% off a supplement stack", ar: "خصم 25% على المكملات" }, cost: 600, valueJod: 25, tier: 2 },
+  { id: "r5", icon: "👟", name: { en: "30% off the sportswear shop", ar: "خصم 30% على متجر الرياضة" }, cost: 750, valueJod: 35, tier: 2 },
+  { id: "r6", icon: "🏋️", name: { en: "1-on-1 personal-training session", ar: "جلسة تدريب شخصي" }, cost: 900, valueJod: 25, tier: 2 },
+  // tier 3 — big goals (a couple months of dedication)
+  { id: "r7", icon: "🎒", name: { en: "FitJo gym bag + shaker", ar: "حقيبة FitJo + شيكر" }, cost: 1400, valueJod: 35, tier: 3 },
+  { id: "r8", icon: "🎧", name: { en: "Wireless workout earbuds", ar: "سماعات لاسلكية للتمرين" }, cost: 2800, valueJod: 70, tier: 3 },
+  { id: "r9", icon: "🏆", name: { en: "One month free membership", ar: "شهر عضوية مجاني" }, cost: 4000, valueJod: 45, tier: 3 },
 ];
+const REWARD_TIERS = [
+  { n: 1, en: "Everyday perks", ar: "مكافآت يومية" },
+  { n: 2, en: "Worth working for", ar: "تستحق الجهد" },
+  { n: 3, en: "Big goals", ar: "أهداف كبرى" },
+];
+const rewardValue = (r) => (typeof fmtPrice === "function" ? fmtPrice(r.valueJod) : `${r.valueJod} JD`);
 
 /* ---------- helpers ---------- */
 function memGym(u) { const s = u && u.subscription; return (s && typeof GYMS !== "undefined") ? GYMS.find(g => g.id === s.gymId) : null; }
@@ -133,15 +148,28 @@ function secMembership(u) {
       <div class="note">${tL("Resets every Monday. Show up more than they do.", "تُصفَّر كل اثنين. احضر أكثر منهم.")}</div>
     </div>`;
 
+  const rewardCard = (r) => {
+    const can = pts >= r.cost;
+    const toGo = r.cost - pts;
+    const btn = can
+      ? `<button class="btn" data-redeem="${r.id}">${tL("Redeem", "استبدل")} · ${r.cost}</button>`
+      : `<button class="btn ghost" disabled>${r.cost} ${tL("pts", "نقطة")}</button>`;
+    return `<div class="reward ${can ? "affordable" : "locked"}">
+      <div class="rw-ic">${r.icon}</div>
+      <div class="rw-name">${esc(r.name[state.lang])}</div>
+      <div class="rw-value">${tL("worth", "بقيمة")} ${rewardValue(r)}</div>
+      ${btn}
+      ${can ? "" : `<div class="rw-togo">${toGo} ${tL("pts to go", "نقطة متبقية")}</div>`}
+    </div>`;
+  };
   const rewardsCard = `
-    <div class="ed-section" style="margin-top:6px">${tL("Rewards & shop", "المكافآت والمتجر")}</div>
-    <div class="rewards-grid">
-      ${REWARDS.map(r => `<div class="reward ${pts >= r.cost ? "" : "locked"}">
-        <div class="rw-ic">${r.icon}</div>
-        <div class="rw-name">${esc(r.name[state.lang])}</div>
-        <button class="btn ${pts >= r.cost ? "" : "ghost"}" data-redeem="${r.id}" ${pts >= r.cost ? "" : "disabled"}>${r.cost} ${tL("pts", "نقطة")}</button>
+    <div class="ed-section" style="margin-top:6px">🎁 ${tL("Rewards & shop", "المكافآت والمتجر")}</div>
+    <div class="h-sub" style="margin-top:-2px">${tL("Real gear and perks — your check-ins add up to serious value.", "معدّات وامتيازات حقيقية — حضورك يتحوّل إلى قيمة فعلية.")}</div>
+    ${REWARD_TIERS.map(tier => `
+      <div class="rw-tier-label">${tier[state.lang] || tier.en}</div>
+      <div class="rewards-grid">
+        ${REWARDS.filter(r => r.tier === tier.n).map(rewardCard).join("")}
       </div>`).join("")}
-    </div>
     ${redeemed.length ? `<div class="ed-section">${tL("Your redeemed rewards", "مكافآتك المستبدلة")}</div>
       ${redeemed.map(x => `<div class="kv"><span>${esc(x.name)} · <code>${esc(x.code)}</code></span><span class="tag">${new Date(x.ts).toLocaleDateString(state.lang === "ar" ? "ar-JO" : "en-US", { month: "short", day: "numeric" })}</span></div>`).join("")}` : ""}`;
 

@@ -349,11 +349,18 @@ img { max-width: 100%; }
 .checkin-big:disabled { opacity: .7; }
 .rewards-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 6px 0 4px; }
 @media (max-width: 480px) { .rewards-grid { grid-template-columns: 1fr; } }
-.reward { background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; padding: 12px; text-align: center; }
-.reward.locked { opacity: .6; }
-.reward .rw-ic { font-size: 26px; }
-.reward .rw-name { font-size: 13px; font-weight: 700; margin: 6px 0 8px; min-height: 32px; }
+.rw-tier-label { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em;
+  color: var(--muted); margin: 14px 0 8px; }
+.reward { background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; padding: 12px; text-align: center;
+  display: flex; flex-direction: column; align-items: center; }
+.reward.affordable { border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+  background: color-mix(in srgb, var(--accent) 7%, var(--surface-2)); }
+.reward.locked { opacity: .72; }
+.reward .rw-ic { font-size: 30px; }
+.reward .rw-name { font-size: 13px; font-weight: 800; margin: 6px 0 2px; min-height: 32px; }
+.reward .rw-value { font-size: 11px; font-weight: 700; color: var(--accent); margin-bottom: 9px; }
 .reward .btn { width: 100%; padding: 8px; font-size: 13px; }
+.reward .rw-togo { font-size: 11px; color: var(--muted); margin-top: 6px; font-weight: 700; }
 
 /* ---- Pro upsell ---- */
 .pro-feats { list-style: none; margin: 12px 0 16px; padding: 0; }
