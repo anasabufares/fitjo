@@ -155,6 +155,22 @@ function renderStaticText() {
   $("#heroSub").textContent = t("heroSub");
   $("#searchInput").placeholder = t("searchPlaceholder");
   $("#searchInput").value = state.filters.q;
+  renderServices();
+}
+
+/* ---------- Render: services hub (Careem-style) ---------- */
+function renderServices() {
+  const L = state.lang === "ar";
+  $("#svcTitle").textContent = L ? "الخدمات" : "Services";
+  $("#svcGymLbl").textContent = L ? "النادي" : "Gym";
+  $("#svcNutritionLbl").textContent = L ? "التغذية" : "Nutrition";
+  $("#svcSuppsLbl").textContent = L ? "المكملات" : "Supplements";
+  $("#svcRankLbl").textContent = L ? "التصنيف" : "Rank";
+  $("#svcPointsLbl").textContent = L ? "نقطة" : "points";
+  const u = (typeof currentUser === "function") ? currentUser() : null;
+  const chip = $("#svcPoints");
+  if (u) { $("#svcPointsNum").textContent = u.points || 0; chip.style.display = ""; }
+  else chip.style.display = "none";
 }
 
 /* ---------- Render: filters panel ---------- */
@@ -520,6 +536,13 @@ function bind() {
   $("#langToggle").onclick = () => { state.lang = state.lang === "en" ? "ar" : "en"; persist(); window.dispatchEvent(new Event("fj:langchange")); state.view === "detail" ? (renderAll(), renderDetail(state.currentGym)) : renderAll(); };
   $("#themeToggle").onclick = () => { state.theme = state.theme === "light" ? "dark" : "light"; persist(); applyChrome(); renderControls(); };
   $("#currencySel").onchange = (e) => { state.currency = e.target.value; persist(); state.view === "detail" ? renderDetail(state.currentGym) : renderAll(); };
+  // services hub
+  $("#svcGym").onclick = () => { if (state.view === "detail") showList(); document.querySelector(".layout").scrollIntoView({ behavior: "smooth" }); };
+  $("#svcNutrition").onclick = () => openAccountSection("nutrition");
+  $("#svcSupps").onclick = () => openAccountSection("supplements");
+  $("#svcRank").onclick = () => openAccountSection("rank");
+  $("#svcPoints").onclick = () => openAccountSection("membership");
+
   // search
   $("#searchInput").addEventListener("input", (e) => { state.filters.q = e.target.value; if (state.view === "detail") showList(); renderResults(); });
 

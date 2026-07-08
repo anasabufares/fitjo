@@ -695,3 +695,60 @@ h1, .hero h1, .acct-body h3 { letter-spacing: -.02em; font-weight: 900; }
 
 /* focus rings */
 .field select:focus, .control:focus { border-color: var(--accent); box-shadow: var(--accent-glow); outline: none; }
+
+/* ---------- services hub (Careem-style) ---------- */
+.services { padding: 18px 0 4px; }
+.svc-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.svc-title { font-size: 15px; font-weight: 900; letter-spacing: -.01em; }
+.svc-points {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  color: var(--accent); font-weight: 800; font-size: 12px;
+  border-radius: 999px; padding: 5px 12px;
+}
+.svc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.svc {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+  padding: 16px 8px 12px; box-shadow: var(--shadow); color: var(--text);
+  transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
+}
+.svc:hover { transform: translateY(-3px); border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); box-shadow: var(--accent-glow); }
+.svc-ico {
+  width: 52px; height: 52px; border-radius: 16px; display: grid; place-items: center;
+  font-size: 26px; background: color-mix(in srgb, var(--accent) 10%, var(--surface-2));
+}
+.svc-lbl { font-weight: 800; font-size: 13px; }
+@media (max-width: 560px) {
+  .svc-grid { gap: 8px; }
+  .svc { padding: 12px 4px 10px; border-radius: 14px; }
+  .svc-ico { width: 44px; height: 44px; font-size: 22px; border-radius: 13px; }
+  .svc-lbl { font-size: 11px; }
+}
+
+/* ---------- settings menus (security / support) ---------- */
+.menu-list { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.menu-row {
+  display: flex; align-items: center; gap: 12px; width: 100%; text-align: start;
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: 14px;
+  padding: 12px 14px; color: var(--text); font-size: 14px;
+  transition: border-color .15s ease, transform .15s ease;
+}
+.menu-row:hover { border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); transform: translateY(-1px); }
+.mr-ico { font-size: 20px; flex-shrink: 0; }
+.mr-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.mr-t { font-weight: 700; }
+.mr-d { font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mr-chev { color: var(--muted); font-size: 18px; font-weight: 700; }
+[dir="rtl"] .mr-chev { transform: scaleX(-1); }
+.back-link { display: inline-block; margin-bottom: 10px; font-size: 13px; }
+
+/* FAQ + policy docs */
+.faq { border: 1px solid var(--border); border-radius: 12px; margin-top: 8px; background: var(--surface-2); }
+.faq summary { cursor: pointer; font-weight: 700; font-size: 14px; padding: 11px 14px; list-style: none; position: relative; }
+.faq summary::after { content: "▾"; position: absolute; inset-inline-end: 14px; color: var(--muted); transition: transform .2s; }
+.faq[open] summary::after { transform: rotate(180deg); }
+.faq p { padding: 0 14px 12px; font-size: 13px; color: var(--muted); }
+.doc p { font-size: 13.5px; margin-top: 10px; }
+.doc b { display: inline; }

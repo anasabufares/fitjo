@@ -80,6 +80,7 @@ function renderAuthButton() {
     slot.innerHTML = `<button class="control" id="signInBtn" style="font-weight:700">${t("signIn")}</button>`;
     document.getElementById("signInBtn").onclick = () => openAuth("signin");
   }
+  if (typeof renderServices === "function") renderServices();   // keep the points chip in sync
 }
 
 /* ---------- open / close ---------- */
@@ -218,8 +219,7 @@ function accountHTML() {
     ["profile", "👤", t("myProfile")], ["membership", "🎟️", tL("Membership", "العضوية")],
     ["plan", "🎯", t("myPlan")], ["workouts", "🏋️", tL("Workouts", "التمارين")], ["rank", "🏆", t("rankTitle")], ["progress", "📈", t("myProgress")],
     ["nutrition", "🍎", t("calorieTracker")], ["inbody", "🧬", tL("In-body", "فحص الجسم")], ["supplements", "💊", tL("Supplements", "المكملات")],
-    ["security", "🔒", t("security")], ["email", "✉️", t("changeEmail")],
-    ["privacy", "🛡️", t("privacy")], ["notifications", "🔔", t("notifications")],
+    ["security", "🔒", t("security")], ["notifications", "🔔", t("notifications")],
     ["preferences", "⚙️", t("preferences")], ["danger", "⚠️", t("dangerZone")],
   ];
   return `
@@ -242,7 +242,9 @@ function accountHTML() {
 function switchSection(sec) {
   acctSection = sec;
   document.getElementById("acctBody").innerHTML = sectionHTML(sec);
-  document.querySelectorAll(".acct-nav [data-sec]").forEach(b => b.classList.toggle("active", b.dataset.sec === sec));
+  // sub-pages of Security keep the Security nav item highlighted
+  const navSec = ["secmain", "email", "privacy", "support", "contact", "faq", "policy", "conduct"].includes(sec) ? "security" : sec;
+  document.querySelectorAll(".acct-nav [data-sec]").forEach(b => b.classList.toggle("active", b.dataset.sec === navSec));
 }
 function reRenderSection() { const b = document.getElementById("acctBody"); if (b) b.innerHTML = sectionHTML(acctSection); }
 
@@ -273,8 +275,14 @@ function sectionHTML(sec) {
   if (sec === "rank" && typeof secRank === "function") return secRank(u);
   if (sec === "progress") return secProgress(u);
   if (sec === "security") return secSecurity(u);
+  if (sec === "secmain") return secSecurityMain(u);
   if (sec === "email") return secEmail(u);
   if (sec === "privacy") return secPrivacy(u);
+  if (sec === "support" && typeof secSupport === "function") return secSupport(u);
+  if (sec === "contact" && typeof secContact === "function") return secContact(u);
+  if (sec === "faq" && typeof secFaq === "function") return secFaq(u);
+  if (sec === "policy" && typeof secPolicy === "function") return secPolicy(u);
+  if (sec === "conduct" && typeof secConduct === "function") return secConduct(u);
   if (sec === "notifications") return secNotif(u);
   if (sec === "preferences") return secPrefs();
   if (sec === "danger") return secDanger();
@@ -365,10 +373,34 @@ function delWeight(dateStr) {
   updateUser({ weights }); reRenderSection();
 }
 
+/* Security is a menu (like a settings hub): password & sign-in, change
+   email, privacy and support all live inside it. */
+function menuRow(sec, icon, label, desc) {
+  return `<button class="menu-row" data-sec="${sec}">
+    <span class="mr-ico">${icon}</span>
+    <span class="mr-txt"><span class="mr-t">${label}</span>${desc ? `<span class="mr-d">${desc}</span>` : ""}</span>
+    <span class="mr-chev">›</span>
+  </button>`;
+}
+function backLink(sec, label) {
+  return `<button class="auth-link back-link" data-sec="${sec}">‹ ${label}</button>`;
+}
 function secSecurity(u) {
+  return `
+  <h3>🔒 ${t("security")}</h3>
+  <div class="h-sub">${tL("Your account, sign-in and help — all in one place.", "حسابك وتسجيل الدخول والمساعدة — كلها في مكان واحد.")}</div>
+  <div class="menu-list">
+    ${menuRow("secmain", "🔑", tL("Password & sign-in", "كلمة المرور وتسجيل الدخول"), tL("Password, 2FA, passkeys", "كلمة المرور والتحقق الثنائي ومفاتيح المرور"))}
+    ${menuRow("email", "✉️", t("changeEmail"), esc(u.email))}
+    ${menuRow("privacy", "🛡️", t("privacy"), tL("What others can see", "ما يمكن للآخرين رؤيته"))}
+    ${menuRow("support", "🆘", tL("Support", "الدعم"), tL("Contact us, FAQ, policies", "اتصل بنا، الأسئلة الشائعة، السياسات"))}
+  </div>`;
+}
+function secSecurityMain(u) {
   const twoFA = u.twoFA;
   return `
-  <h3>${t("security")}</h3>
+  ${backLink("security", t("security"))}
+  <h3>🔑 ${tL("Password & sign-in", "كلمة المرور وتسجيل الدخول")}</h3>
   <div class="h-sub">${t("changePassword")}</div>
   <div class="form-row"><label>${t("currentPassword")}</label><input id="curPw" type="password"></div>
   <div class="form-two">
@@ -399,7 +431,8 @@ function twoFAEnabledHTML(u) {
 
 function secEmail(u) {
   return `
-  <h3>${t("changeEmail")}</h3>
+  ${backLink("security", t("security"))}
+  <h3>✉️ ${t("changeEmail")}</h3>
   <div class="h-sub">${t("email")}: ${esc(u.email)}</div>
   <div class="form-row"><label>${t("newEmail")}</label><input id="newEmailIn" type="email" placeholder="new@email.com"></div>
   <div class="form-row"><label>${t("currentPassword")}</label><input id="emailPw" type="password"></div>
@@ -407,7 +440,7 @@ function secEmail(u) {
 }
 function secPrivacy(u) {
   const rows = [["profilePublic", t("privProfilePublic")], ["showFav", t("privShowFav")], ["trainerContact", t("privTrainerContact")], ["shareData", t("privShareData")]];
-  return `<h3>${t("privacy")}</h3><div class="h-sub">&nbsp;</div>` + rows.map(([k, l]) => toggleRow("priv", k, l, u.privacy[k])).join("");
+  return `${backLink("security", t("security"))}<h3>🛡️ ${t("privacy")}</h3><div class="h-sub">&nbsp;</div>` + rows.map(([k, l]) => toggleRow("priv", k, l, u.privacy[k])).join("");
 }
 function secNotif(u) {
   const rows = [["offers", t("notifOffers")], ["expiry", t("notifExpiry")], ["classes", t("notifClass")], ["news", t("notifNews")]];
