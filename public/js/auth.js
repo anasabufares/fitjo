@@ -50,6 +50,7 @@ function updateUser(patch) {
   if (i < 0) return;
   users[i] = { ...users[i], ...patch };
   saveUsers(users);
+  if (typeof renderServices === "function") renderServices();   // rank medal + points chip stay fresh
 }
 function createUser(data, provider = "email") {
   const users = getUsers();
@@ -218,8 +219,7 @@ function accountHTML() {
   const u = currentUser();
   const nav = [
     ["profile", "👤", t("myProfile")], ["membership", "🎟️", tL("Membership", "العضوية")],
-    ["workouts", "🏋️", tL("Workouts", "التمارين")], ["rank", "🏆", t("rankTitle")],
-    ["inbody", "🧬", tL("In-body", "فحص الجسم")], ["supplements", "💊", tL("Supplements", "المكملات")],
+    ["workouts", "🏋️", tL("Workouts", "التمارين")], ["inbody", "🧬", tL("In-body", "فحص الجسم")],
     ["security", "🔒", t("security")], ["notifications", "🔔", t("notifications")],
     ["preferences", "⚙️", t("preferences")], ["danger", "⚠️", t("dangerZone")],
   ];

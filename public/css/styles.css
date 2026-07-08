@@ -762,3 +762,6 @@ h1, .hero h1, .acct-body h3 { letter-spacing: -.02em; font-weight: 900; }
 }
 .svcp-body { max-width: 760px; }
 @media (max-width: 560px) { .svcp-head .tab { padding: 7px 10px; font-size: 12px; } }
+
+.svcp-title { font-weight: 900; font-size: 15px; letter-spacing: -.01em; }
+.svc-ico svg { display: block; }

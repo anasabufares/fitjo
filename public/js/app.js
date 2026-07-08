@@ -171,15 +171,53 @@ function renderServices() {
   const chip = $("#svcPoints");
   if (u) { $("#svcPointsNum").textContent = u.points || 0; chip.style.display = ""; }
   else chip.style.display = "none";
-  if (svcSection) renderServicePanel();   // keep the inline panel in sync on language change
+  renderRankTile(u);
+  if (svcGroup) renderServicePanel();   // keep the inline panel in sync on language change
 }
 
-/* ---------- inline nutrition panel (shows in place of the gym list) ---------- */
-let svcSection = null;   // "plan" | "nutrition" | "progress" while the panel is open
+/* Rank tile: show the user's own rank as a medal instead of the logo */
+function rankMedalSVG(color, roman) {
+  return `<svg viewBox="0 0 48 48" width="34" height="34" aria-hidden="true">
+    <path d="M16 28 L11 44 L18.5 40.5 L22 47 L26 33" fill="${color}" opacity=".75"/>
+    <path d="M32 28 L37 44 L29.5 40.5 L26 47 L22 33" fill="${color}" opacity=".55"/>
+    <circle cx="24" cy="19" r="13.5" fill="${color}"/>
+    <circle cx="24" cy="19" r="13.5" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="2.5"/>
+    <text x="24" y="24" text-anchor="middle" font-size="13" font-weight="900" fill="#fff" font-family="inherit">${roman}</text>
+  </svg>`;
+}
+function renderRankTile(u) {
+  const ico = $("#svcRank") && $("#svcRank").querySelector(".svc-ico");
+  if (!ico) return;
+  if (u && u.liftLog && u.rankBw && typeof overallScore === "function") {
+    const o = overallScore(u.liftLog, u.rankBw, u.gender);
+    if (o) {
+      const td = tierOfScore(o.score);
+      const col = RANK_TIERS[td.tier].color;
+      ico.innerHTML = rankMedalSVG(col, divRoman(td.div));
+      ico.style.background = `color-mix(in srgb, ${col} 20%, var(--surface-2))`;
+      $("#svcRank").title = `${tierName(td.tier)} ${divRoman(td.div)}`;
+      return;
+    }
+  }
+  ico.textContent = "🏆"; ico.style.background = ""; $("#svcRank").title = "";
+}
 
-function openNutritionPanel(sub) {
+/* ---------- inline service panels (show in place of the gym list) ---------- */
+const SVC_GROUPS = { nutrition: ["plan", "nutrition", "progress"], rank: ["rank"], supplements: ["supplements"] };
+const SVC_TABS = {
+  plan: ["🎯", "My plan", "خطتي"],
+  nutrition: ["🍎", "Calorie tracker", "متتبّع السعرات"],
+  progress: ["📈", "My progress", "تقدّمي"],
+  rank: ["🏆", "Rank", "التصنيف"],
+  supplements: ["💊", "Supplements", "المكملات"],
+};
+let svcGroup = null;     // "nutrition" | "rank" | "supplements" while the panel is open
+let svcSection = null;   // active section inside the group
+
+function openServicePanel(group, sub) {
   if (typeof currentUser !== "function" || !currentUser()) return openAuth("signin");
-  svcSection = sub || "plan";
+  svcGroup = group;
+  svcSection = sub || SVC_GROUPS[group][0];
   acctSection = svcSection;          // section helpers re-render via #acctBody
   closeAuth();
   renderServicePanel();
@@ -187,23 +225,23 @@ function openNutritionPanel(sub) {
   $(".layout").style.display = "none";
   $("#svcPanel").scrollIntoView({ behavior: "smooth", block: "start" });
 }
+function openNutritionPanel(sub) { openServicePanel("nutrition", sub); }
 function closeServicePanel() {
   const p = $("#svcPanel");
   if (!p || p.hidden) return;
   p.hidden = true; p.innerHTML = "";
   $(".layout").style.display = "";
-  svcSection = null;
+  svcGroup = null; svcSection = null;
 }
 function renderServicePanel() {
   const L = state.lang === "ar";
-  const tabs = [
-    ["plan", "🎯", L ? "خطتي" : "My plan"],
-    ["nutrition", "🍎", L ? "متتبّع السعرات" : "Calorie tracker"],
-    ["progress", "📈", L ? "تقدّمي" : "My progress"],
-  ];
+  const keys = SVC_GROUPS[svcGroup];
+  const head = keys.length > 1
+    ? `<div class="tabs">${keys.map(k => `<button class="tab ${svcSection === k ? "active" : ""}" data-svctab="${k}">${SVC_TABS[k][0]} ${SVC_TABS[k][L ? 2 : 1]}</button>`).join("")}</div>`
+    : `<div class="svcp-title">${SVC_TABS[svcSection][0]} ${SVC_TABS[svcSection][L ? 2 : 1]}</div>`;
   $("#svcPanel").innerHTML = `
     <div class="svcp-head">
-      <div class="tabs">${tabs.map(([k, ic, l]) => `<button class="tab ${svcSection === k ? "active" : ""}" data-svctab="${k}">${ic} ${l}</button>`).join("")}</div>
+      ${head}
       <button class="icon-btn" id="svcPanelClose" title="✕">✕</button>
     </div>
     <div class="acct-body svcp-body" id="acctBody">${sectionHTML(svcSection)}</div>`;
@@ -574,7 +612,9 @@ function bind() {
   $("#currencySel").onchange = (e) => { state.currency = e.target.value; persist(); state.view === "detail" ? renderDetail(state.currentGym) : renderAll(); };
   // services hub
   $("#svcGym").onclick = () => { closeServicePanel(); if (state.view === "detail") showList(); document.querySelector(".layout").scrollIntoView({ behavior: "smooth" }); };
-  $("#svcNutrition").onclick = () => (svcSection ? closeServicePanel() : openNutritionPanel("plan"));
+  $("#svcNutrition").onclick = () => (svcGroup === "nutrition" ? closeServicePanel() : openServicePanel("nutrition"));
+  $("#svcRank").onclick = () => (svcGroup === "rank" ? closeServicePanel() : openServicePanel("rank"));
+  $("#svcSupps").onclick = () => (svcGroup === "supplements" ? closeServicePanel() : openServicePanel("supplements"));
   const sp = $("#svcPanel");
   sp.addEventListener("click", (e) => {
     const tb = e.target.closest("[data-svctab]");
@@ -583,8 +623,6 @@ function bind() {
     if (typeof onAuthClick === "function") onAuthClick(e);
   });
   sp.addEventListener("change", (e) => { if (typeof onAuthChange === "function") onAuthChange(e); });
-  $("#svcSupps").onclick = () => openAccountSection("supplements");
-  $("#svcRank").onclick = () => openAccountSection("rank");
   $("#svcPoints").onclick = () => openAccountSection("membership");
 
   // search
