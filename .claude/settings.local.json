@@ -1,4 +1,19 @@
 {
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd \"$CLAUDE_PROJECT_DIR\" || exit 0; [ \"$(git branch --show-current)\" = \"main\" ] || exit 0; [ -n \"$(git status --porcelain)\" ] && git add -A >/dev/null 2>&1 && git commit -m \"Auto-sync: FitJo updates\" -m \"Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>\" >/dev/null 2>&1; [ \"$(git rev-list origin/main..main --count 2>/dev/null)\" != \"0\" ] && git push origin main >/dev/null 2>&1; exit 0",
+            "timeout": 60,
+            "async": true,
+            "statusMessage": "Syncing to GitHub…"
+          }
+        ]
+      }
+    ]
+  },
   "permissions": {
     "allow": [
       "Bash(node -e ' *)",
