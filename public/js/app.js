@@ -203,13 +203,14 @@ function renderRankTile(u) {
 }
 
 /* ---------- inline service panels (show in place of the gym list) ---------- */
-const SVC_GROUPS = { gym: ["gyms", "workouts"], nutrition: ["plan", "nutrition", "progress"], rank: ["rank"], supplements: ["supplements"] };
+const SVC_GROUPS = { gym: ["gyms", "workouts"], nutrition: ["plan", "nutrition", "progress", "inbody"], rank: ["rank"], supplements: ["supplements"] };
 const SVC_TABS = {
   gyms: ["🏋️", "Gyms", "الأندية"],
   workouts: ["💪", "Workouts", "التمارين"],
   plan: ["🎯", "My plan", "خطتي"],
   nutrition: ["🍎", "Calorie tracker", "متتبّع السعرات"],
   progress: ["📈", "My progress", "تقدّمي"],
+  inbody: ["🧬", "In-body", "فحص الجسم"],
   rank: ["🏆", "Rank", "التصنيف"],
   supplements: ["💊", "Supplements", "المكملات"],
 };

@@ -74,8 +74,7 @@ function renderAuthButton() {
   const slot = document.getElementById("authSlot"); if (!slot) return;
   const u = currentUser();
   if (u) {
-    slot.innerHTML = `<button class="icon-btn" id="calBtn" title="${esc(t("calorieTracker"))}" style="margin-inline-end:6px">🍎</button><button class="avatar-sm" id="acctBtn" title="${esc(u.name)}">${initials(u.name)}</button>`;
-    document.getElementById("calBtn").onclick = () => openNutritionPanel("nutrition");
+    slot.innerHTML = `<button class="avatar-sm" id="acctBtn" title="${esc(u.name)}">${initials(u.name)}</button>`;
     document.getElementById("acctBtn").onclick = () => openAuth("account");
   } else {
     slot.innerHTML = `<button class="control" id="signInBtn" style="font-weight:700">${t("signIn")}</button>`;
@@ -219,7 +218,6 @@ function accountHTML() {
   const u = currentUser();
   const nav = [
     ["profile", "👤", t("myProfile")], ["membership", "🎟️", tL("Membership", "العضوية")],
-    ["inbody", "🧬", tL("In-body", "فحص الجسم")],
     ["security", "🔒", t("security")], ["notifications", "🔔", t("notifications")],
     ["preferences", "⚙️", t("preferences")], ["danger", "⚠️", t("dangerZone")],
   ];
