@@ -713,6 +713,29 @@ h1, .hero h1, .acct-body h3 { letter-spacing: -.02em; font-weight: 900; }
   color: var(--accent); font-weight: 800; font-size: 12px;
   border-radius: 999px; padding: 5px 12px;
 }
+/* home check-in bar — the easiest way to check in, right on the main page */
+.checkin-bar {
+  width: 100%; display: flex; align-items: center; gap: 12px; margin: 0 0 12px;
+  padding: 15px 18px; border: none; border-radius: 16px; cursor: pointer;
+  background: var(--accent-grad); color: #fff; box-shadow: var(--accent-glow);
+  transition: transform .15s ease, filter .15s ease;
+}
+.checkin-bar:hover { transform: translateY(-2px); filter: brightness(1.05); }
+.checkin-bar:active { transform: translateY(0); }
+.checkin-bar .cb-ico { font-size: 22px; line-height: 1; flex-shrink: 0; }
+.checkin-bar .cb-txt { font-weight: 800; font-size: 16px; text-align: start; flex: 1; }
+.checkin-bar .cb-streak { display: inline-flex; align-items: center; margin-inline-start: 8px;
+  background: rgba(255,255,255,.22); border-radius: 999px; padding: 2px 9px; font-size: 13px; }
+.checkin-bar .cb-pts { font-weight: 900; font-size: 15px; white-space: nowrap;
+  background: rgba(255,255,255,.22); border-radius: 999px; padding: 6px 12px; flex-shrink: 0; }
+.checkin-bar.done { background: var(--surface-2); color: var(--muted); box-shadow: none; cursor: default; border: 1px solid var(--border); }
+.checkin-bar.done:hover { transform: none; filter: none; }
+.checkin-bar.done .cb-streak { background: color-mix(in srgb, var(--accent) 14%, var(--surface)); color: var(--accent); }
+@media (max-width: 560px) {
+  .checkin-bar { padding: 13px 14px; }
+  .checkin-bar .cb-txt { font-size: 14px; }
+}
+
 .svc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
 .svc {
   display: flex; flex-direction: column; align-items: center; gap: 8px;

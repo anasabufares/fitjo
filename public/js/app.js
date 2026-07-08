@@ -172,7 +172,30 @@ function renderServices() {
   if (u) { $("#svcPointsNum").textContent = u.points || 0; chip.style.display = ""; }
   else chip.style.display = "none";
   renderRankTile(u);
+  renderHomeCheckin(u);
   if (svcGroup) renderServicePanel();   // keep the inline panel in sync on language change
+}
+
+/* Home check-in bar — one tap right on the main page */
+function renderHomeCheckin(u) {
+  const bar = $("#homeCheckin");
+  if (!bar) return;
+  const L = state.lang === "ar";
+  // needs the membership helpers (subActive/checkedInToday/streakOf/nextCheckinValue)
+  if (!u || typeof subActive !== "function" || !subActive(u)) { bar.style.display = "none"; return; }
+  bar.style.display = "";
+  const streak = streakOf(u);
+  const flame = streak ? ` <span class="cb-streak">🔥 ${streak}</span>` : "";
+  if (checkedInToday(u)) {
+    bar.classList.add("done");
+    bar.disabled = true;
+    bar.innerHTML = `<span class="cb-ico">✓</span><span class="cb-txt">${L ? "تم حضور اليوم — نراك غداً" : "Checked in today — see you tomorrow"}${flame}</span>`;
+  } else {
+    bar.classList.remove("done");
+    bar.disabled = false;
+    const pts = nextCheckinValue(u);
+    bar.innerHTML = `<span class="cb-ico">✅</span><span class="cb-txt">${L ? "سجّل حضورك في النادي" : "Check in at the gym"}${flame}</span><span class="cb-pts">+${pts} ${L ? "نقطة" : "pts"}</span>`;
+  }
 }
 
 /* Rank tile: show the user's own rank as a medal instead of the logo */
@@ -639,6 +662,12 @@ function bind() {
   });
   sp.addEventListener("change", (e) => { if (typeof onAuthChange === "function") onAuthChange(e); });
   $("#svcPoints").onclick = () => openAccountSection("membership");
+  $("#homeCheckin").onclick = () => {
+    if (typeof currentUser === "function" && currentUser() && typeof checkIn === "function") {
+      checkIn();                 // awards points, updates streak, re-renders the open membership section
+      renderServices();          // refresh the home bar + points chip immediately
+    } else openAccountSection("membership");
+  };
 
   // search
   $("#searchInput").addEventListener("input", (e) => { state.filters.q = e.target.value; if (state.view === "detail") showList(); renderResults(); });
