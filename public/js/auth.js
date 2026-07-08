@@ -74,7 +74,7 @@ function renderAuthButton() {
   const u = currentUser();
   if (u) {
     slot.innerHTML = `<button class="icon-btn" id="calBtn" title="${esc(t("calorieTracker"))}" style="margin-inline-end:6px">🍎</button><button class="avatar-sm" id="acctBtn" title="${esc(u.name)}">${initials(u.name)}</button>`;
-    document.getElementById("calBtn").onclick = () => openAccountSection("nutrition");
+    document.getElementById("calBtn").onclick = () => openNutritionPanel("nutrition");
     document.getElementById("acctBtn").onclick = () => openAuth("account");
   } else {
     slot.innerHTML = `<button class="control" id="signInBtn" style="font-weight:700">${t("signIn")}</button>`;
@@ -85,6 +85,7 @@ function renderAuthButton() {
 
 /* ---------- open / close ---------- */
 function openAuth(view) {
+  if (typeof closeServicePanel === "function") closeServicePanel();   // only one #acctBody at a time
   if (view === "account" && !currentUser()) view = "signin";
   authView = view;
   if (view === "account") acctSection = "profile";

@@ -10,7 +10,7 @@
      • Cross-origin (Leaflet CDN, OpenStreetMap tiles) is left to the
        network; offline the map degrades to its built-in fallback.
    ============================================================= */
-const CACHE = "fitjo-cache-v6";
+const CACHE = "fitjo-cache-v7";
 
 const APP_SHELL = [
   "index.html", "manifest.json",
