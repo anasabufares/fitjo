@@ -5,7 +5,6 @@
 const state = {
   lang: localStorage.getItem("fj_lang") || "en",
   theme: localStorage.getItem("fj_theme") || "light",
-  accent: localStorage.getItem("fj_accent") || "green",
   currency: localStorage.getItem("fj_cur") || "JOD",
   unit: localStorage.getItem("fj_unit") || "kg",   // weight unit: kg | lbs
   favorites: JSON.parse(localStorage.getItem("fj_favs") || "[]"),
@@ -51,7 +50,6 @@ const t = (key) => I18N[state.lang][key] ?? key;
 function persist() {
   localStorage.setItem("fj_lang", state.lang);
   localStorage.setItem("fj_theme", state.theme);
-  localStorage.setItem("fj_accent", state.accent);
   localStorage.setItem("fj_cur", state.currency);
   localStorage.setItem("fj_unit", state.unit);
   localStorage.setItem("fj_favs", JSON.stringify(state.favorites));
@@ -75,7 +73,6 @@ function applyChrome() {
   document.documentElement.setAttribute("dir", I18N[state.lang].dir);
   document.documentElement.setAttribute("lang", state.lang);
   document.body.setAttribute("data-theme", state.theme);
-  document.body.setAttribute("data-accent", state.accent);
 }
 
 /* ---------- Money ---------- */
@@ -149,14 +146,6 @@ function renderControls() {
     cur.dataset.built = "1";
   }
   cur.value = state.currency;
-
-  // accent swatches
-  const accents = { green: "#16a34a", blue: "#2563eb", violet: "#7c3aed", orange: "#ea580c" };
-  const accWrap = $("#accentPicker");
-  accWrap.innerHTML = Object.entries(accents).map(([k, c]) =>
-    `<button class="acc-dot ${state.accent === k ? "on" : ""}" data-accent="${k}"
-       style="width:20px;height:20px;border-radius:50%;border:2px solid ${state.accent === k ? "var(--text)" : "transparent"};background:${c};cursor:pointer" title="${k}"></button>`
-  ).join("");
 }
 
 /* ---------- Render: hero + labels ---------- */
@@ -531,11 +520,6 @@ function bind() {
   $("#langToggle").onclick = () => { state.lang = state.lang === "en" ? "ar" : "en"; persist(); window.dispatchEvent(new Event("fj:langchange")); state.view === "detail" ? (renderAll(), renderDetail(state.currentGym)) : renderAll(); };
   $("#themeToggle").onclick = () => { state.theme = state.theme === "light" ? "dark" : "light"; persist(); applyChrome(); renderControls(); };
   $("#currencySel").onchange = (e) => { state.currency = e.target.value; persist(); state.view === "detail" ? renderDetail(state.currentGym) : renderAll(); };
-  $("#accentPicker").addEventListener("click", (e) => {
-    const b = e.target.closest("[data-accent]"); if (!b) return;
-    state.accent = b.dataset.accent; persist(); applyChrome(); renderControls();
-  });
-
   // search
   $("#searchInput").addEventListener("input", (e) => { state.filters.q = e.target.value; if (state.view === "detail") showList(); renderResults(); });
 

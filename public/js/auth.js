@@ -216,7 +216,7 @@ function accountHTML() {
   const u = currentUser();
   const nav = [
     ["profile", "👤", t("myProfile")], ["membership", "🎟️", tL("Membership", "العضوية")],
-    ["plan", "🎯", t("myPlan")], ["workouts", "🏋️", tL("Workouts", "التمارين")], ["progress", "📈", t("myProgress")],
+    ["plan", "🎯", t("myPlan")], ["workouts", "🏋️", tL("Workouts", "التمارين")], ["rank", "🏆", t("rankTitle")], ["progress", "📈", t("myProgress")],
     ["nutrition", "🍎", t("calorieTracker")], ["inbody", "🧬", tL("In-body", "فحص الجسم")], ["supplements", "💊", tL("Supplements", "المكملات")],
     ["security", "🔒", t("security")], ["email", "✉️", t("changeEmail")],
     ["privacy", "🛡️", t("privacy")], ["notifications", "🔔", t("notifications")],
@@ -270,6 +270,7 @@ function sectionHTML(sec) {
   if (sec === "nutrition" && typeof secNutrition === "function") return secNutrition(u);
   if (sec === "inbody" && typeof secInbody === "function") return secInbody(u);
   if (sec === "supplements" && typeof secSupplements === "function") return secSupplements(u);
+  if (sec === "rank" && typeof secRank === "function") return secRank(u);
   if (sec === "progress") return secProgress(u);
   if (sec === "security") return secSecurity(u);
   if (sec === "email") return secEmail(u);
@@ -413,7 +414,6 @@ function secNotif(u) {
   return `<h3>${t("notifications")}</h3><div class="h-sub">&nbsp;</div>` + rows.map(([k, l]) => toggleRow("notif", k, l, u.notif[k])).join("");
 }
 function secPrefs() {
-  const accents = { green: "#16a34a", blue: "#2563eb", violet: "#7c3aed", orange: "#ea580c" };
   const L = state.lang === "ar";
   return `<h3>${t("preferences")}</h3><div class="h-sub">&nbsp;</div>
   <div class="form-row"><label>${t("theme")}</label>
@@ -421,8 +421,6 @@ function secPrefs() {
       <button data-pref-theme="light" class="${state.theme === "light" ? "active" : ""}">☀️ ${L ? "فاتح" : "Light"}</button>
       <button data-pref-theme="dark" class="${state.theme === "dark" ? "active" : ""}">🌙 ${L ? "داكن" : "Dark"}</button>
     </div></div>
-  <div class="form-row"><label>${t("accentColor")}</label>
-    <div class="seg">${Object.entries(accents).map(([k, c]) => `<button data-pref-accent="${k}" class="${state.accent === k ? "active" : ""}" style="${state.accent === k ? `background:${c};color:#fff;border-color:${c}` : ""}">${k}</button>`).join("")}</div></div>
   <div class="form-row"><label>${t("language")}</label>
     <div class="seg">
       <button data-pref-lang="en" class="${state.lang === "en" ? "active" : ""}">English</button>
@@ -652,7 +650,6 @@ function doDelete() {
 }
 function setPref(kind, value) {
   if (kind === "theme") state.theme = value;
-  if (kind === "accent") state.accent = value;
   if (kind === "lang") state.lang = value;
   persist(); applyChrome(); renderControls();
   if (kind === "lang") { window.dispatchEvent(new Event("fj:langchange")); renderStaticText(); renderFilters(); renderResults(); renderAuthView(); }
@@ -669,6 +666,7 @@ function onAuthClick(e) {
   if (typeof handleInbodyClick === "function" && handleInbodyClick(e)) return;
   if (typeof handleSupplementsClick === "function" && handleSupplementsClick(e)) return;
   if (typeof handleNutritionClick === "function" && handleNutritionClick(e)) return;
+  if (typeof handleRankClick === "function" && handleRankClick(e)) return;
   if (hit("#authX")) return closeAuth();
   if (hit("#toSignUp")) return openAuth("signup");
   if (hit("#toSignIn")) return openAuth("signin");
@@ -699,7 +697,6 @@ function onAuthClick(e) {
   if (hit("#confirmDelete")) return doDelete();
   if (hit("#cancelDelete")) return switchSection("danger");
   const pt = hit("[data-pref-theme]"); if (pt) return setPref("theme", pt.dataset.prefTheme);
-  const pa = hit("[data-pref-accent]"); if (pa) return setPref("accent", pa.dataset.prefAccent);
   const pl = hit("[data-pref-lang]"); if (pl) return setPref("lang", pl.dataset.prefLang);
   const pu = hit("[data-pref-unit]"); if (pu) { state.unit = pu.dataset.prefUnit; persist(); reRenderSection(); return; }
 }
@@ -708,6 +705,7 @@ function onAuthChange(e) {
   if (typeof handleMembershipChange === "function" && handleMembershipChange(e)) return;
   if (typeof handleWorkoutsChange === "function" && handleWorkoutsChange(e)) return;
   if (typeof handleNutritionChange === "function" && handleNutritionChange(e)) return;
+  if (typeof handleRankChange === "function" && handleRankChange(e)) return;
   const priv = e.target.dataset.priv, notif = e.target.dataset.notif;
   if (priv) { const p = { ...currentUser().privacy }; p[priv] = e.target.checked; updateUser({ privacy: p }); return toast(t("saved")); }
   if (notif) { const n = { ...currentUser().notif }; n[notif] = e.target.checked; updateUser({ notif: n }); return toast(t("saved")); }
