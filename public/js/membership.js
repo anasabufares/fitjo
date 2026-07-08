@@ -7,7 +7,9 @@
    toast, reRenderSection, openAccountSection, registerMember, GYMS.
    ============================================================= */
 
-const CHECKIN_POINTS = 15;   // earned per gym visit
+const CHECKIN_POINTS = 15;   // base points per gym visit
+const STREAK_BONUS = 5;      // extra points per consecutive day, capped below
+const STREAK_CAP = 7;        // max streak days that add bonus (15 + 7*5 = 50/day)
 const MISS_PENALTY = 5;      // lost per missed day while subscribed
 let pendingSubGym = null;    // gym preselected from a gym's "Subscribe" button
 
@@ -25,11 +27,40 @@ function memGym(u) { const s = u && u.subscription; return (s && typeof GYMS !==
 function subActive(u) { return !!(u && u.subscription && u.subscription.expiresAt > Date.now()); }
 function daysLeft(s) { return s ? Math.max(0, Math.ceil((s.expiresAt - Date.now()) / 86400000)) : 0; }
 function checkedInToday(u) { const d = new Date().toDateString(); return (u.checkins || []).some(c => new Date(c.ts).toDateString() === d); }
-function haversineKm(a1, o1, a2, o2) {
-  const R = 6371, r = x => x * Math.PI / 180;
-  const dA = r(a2 - a1), dO = r(o2 - o1);
-  const h = Math.sin(dA / 2) ** 2 + Math.cos(r(a1)) * Math.cos(r(a2)) * Math.sin(dO / 2) ** 2;
-  return R * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
+
+/* current streak: consecutive days with a check-in, still alive if the
+   last one was yesterday (today's tap extends it) */
+function streakOf(u) {
+  const days = new Set((u.checkins || []).map(c => new Date(c.ts).toDateString()));
+  let s = 0;
+  const d = new Date();
+  if (!days.has(d.toDateString())) d.setDate(d.getDate() - 1);
+  while (days.has(d.toDateString())) { s++; d.setDate(d.getDate() - 1); }
+  return s;
+}
+function checkinValue(streakAfter) { return CHECKIN_POINTS + STREAK_BONUS * Math.min(Math.max(streakAfter - 1, 0), STREAK_CAP); }
+function nextCheckinValue(u) { return checkedInToday(u) ? 0 : checkinValue(streakOf(u) + 1); }
+
+/* ---------- weekly leaderboard (resets every Monday) ---------- */
+function weekStart() { const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - (d.getDay() + 6) % 7); return d.getTime(); }
+function weekPointsOf(u) { const ws = weekStart(); return (u.checkins || []).filter(c => c.ts >= ws).reduce((a, c) => a + (c.pts || CHECKIN_POINTS), 0); }
+const PTS_LB_NAMES = ["Zaid Al-Masri", "Layla H.", "Omar Q.", "Noor S.", "Tariq B.", "Rania K.", "Hashem D.", "Dana M.", "Faris A.", "Yazan T."];
+function demoWeekly(name) {   // deterministic per name+week so the board changes weekly but not on every render
+  let h = Math.floor(weekStart() / 86400000);
+  for (const ch of name) h = (h * 31 + ch.charCodeAt(0)) % 100000;
+  return 40 + (h % 281);
+}
+function weeklyBoard(me) {
+  const rows = PTS_LB_NAMES.map(n => ({ name: n, pts: demoWeekly(n) }));
+  getUsers().forEach(x => {
+    const wp = weekPointsOf(x);
+    if (wp > 0 || (me && x.id === me.id)) rows.push({ name: x.name, pts: wp, me: me && x.id === me.id });
+  });
+  rows.sort((a, b) => b.pts - a.pts);
+  const top = rows.slice(0, 10);
+  const mine = rows.findIndex(r => r.me);
+  if (mine >= 10) top.push({ ...rows[mine], place: mine + 1 });
+  return top.map((r, i) => ({ ...r, place: r.place || i + 1 }));
 }
 function reconcilePoints(u) {
   const today = new Date().toDateString();
@@ -72,16 +103,34 @@ function secMembership(u) {
       <button class="btn block" id="startSub">${tL("Start membership", "ابدأ العضوية")}</button>
     </div>`;
 
+  const streak = streakOf(u);
+  const nextPts = nextCheckinValue(u);
   const pointsCard = `
     <div class="mem-card">
-      <div class="pts-head"><div><div class="pts-num">${pts}</div><div class="l">${tL("points", "نقطة")}</div></div>
-        <div class="pts-check">${didToday ? `<span class="pill on">${tL("Checked in ✓", "تم الحضور ✓")}</span>` : ""}</div></div>
-      <div class="mem-actions">
-        <input type="file" accept="image/*" id="checkinPhoto" hidden>
-        <button class="btn block" id="checkinLoc" ${!active || didToday ? "disabled" : ""}>📍 ${tL("Check in (location)", "تسجيل حضور (الموقع)")}</button>
-        <button class="btn ghost block" id="checkinPhotoBtn" ${!active || didToday ? "disabled" : ""}>📷 ${tL("Check in with a photo", "تسجيل حضور بصورة")}</button>
+      <div class="pts-head">
+        <div><div class="pts-num">${pts}</div><div class="l">${tL("points", "نقطة")}</div></div>
+        <div class="streak-pill ${streak ? "hot" : ""}">🔥 ${streak} ${tL("day streak", "يوم متتالي")}</div>
       </div>
-      <div class="note">${tL(`Earn +${CHECKIN_POINTS} per visit. Miss a day and you lose ${MISS_PENALTY}.`, `اكسب +${CHECKIN_POINTS} لكل زيارة. يوم غياب يخصم ${MISS_PENALTY}.`)}</div>
+      ${didToday
+        ? `<button class="btn block checkin-big" disabled>✓ ${tL("Checked in — see you tomorrow", "تم الحضور — نراك غداً")}</button>`
+        : `<button class="btn block checkin-big" id="checkinBtn" ${active ? "" : "disabled"}>✅ ${tL("Check in", "سجّل حضورك")} · +${nextPts} ${tL("pts", "نقطة")}</button>`}
+      ${active ? "" : `<div class="note">${tL("Start a membership above to check in.", "ابدأ عضوية بالأعلى لتسجيل الحضور.")}</div>`}
+      <div class="note">${tL(`One tap a day. Every streak day is worth +${STREAK_BONUS} more (up to ${checkinValue(STREAK_CAP + 1)}/day). Miss a day: streak resets and −${MISS_PENALTY} pts.`, `ضغطة واحدة يومياً. كل يوم متتالٍ يزيد +${STREAK_BONUS} (حتى ${checkinValue(STREAK_CAP + 1)}/يوم). يوم غياب: تصفير السلسلة و−${MISS_PENALTY} نقطة.`)}</div>
+    </div>`;
+
+  const board = weeklyBoard(u);
+  const leaderboardCard = `
+    <div class="ed-section" style="margin-top:6px">🏁 ${tL("This week's leaderboard", "لوحة صدارة الأسبوع")}</div>
+    <div class="mem-card">
+      <div class="lb-list" style="margin-top:0">
+        ${board.map(r => `<div class="lb-row ${r.me ? "me" : ""}">
+          <span class="lb-place">${r.place}</span>
+          <span class="portal-av lb-av">${initials(r.name)}</span>
+          <span class="lb-name">${esc(r.name)}${r.me ? ` <span class="pill on">${tL("You", "أنت")}</span>` : ""}</span>
+          <span class="lb-score">${r.pts} ${tL("pts", "ن")}</span>
+        </div>`).join("")}
+      </div>
+      <div class="note">${tL("Resets every Monday. Show up more than they do.", "تُصفَّر كل اثنين. احضر أكثر منهم.")}</div>
     </div>`;
 
   const rewardsCard = `
@@ -98,30 +147,22 @@ function secMembership(u) {
 
   return `<h3>🎟️ ${tL("Membership & points", "العضوية والنقاط")}</h3>
     <div class="h-sub">${tL("Your gym, your points, your rewards.", "ناديك، نقاطك، مكافآتك.")}</div>
-    ${subCard}${pointsCard}${rewardsCard}`;
+    ${subCard}${pointsCard}${leaderboardCard}${rewardsCard}`;
 }
 
 /* ---------- actions ---------- */
-function awardCheckin(method, gymId) {
-  const u = currentUser();
-  if (checkedInToday(u)) { toast(tL("Already checked in today", "سجّلت حضورك اليوم")); return; }
-  const checkins = [...(u.checkins || []), { ts: Date.now(), gymId, method }];
-  updateUser({ checkins, points: (u.points || 0) + CHECKIN_POINTS });
-  if (typeof registerMember === "function") registerMember(currentUser());
-  reRenderSection();
-  toast(tL(`+${CHECKIN_POINTS} points! 🎉`, `+${CHECKIN_POINTS} نقطة! 🎉`));
-}
-function checkInLocation() {
+function checkIn() {
   const u = currentUser(), g = memGym(u);
   if (!subActive(u) || !g) { toast(tL("Subscribe to a gym first", "اشترك في نادٍ أولاً")); return; }
-  if (!g.coords) { toast(tL("No location set for this gym — use photo check-in", "لا يوجد موقع لهذا النادي — استخدم الصورة")); return; }
-  if (!navigator.geolocation) { toast(tL("Location not supported", "الموقع غير مدعوم")); return; }
-  toast(tL("Getting your location…", "جارٍ تحديد موقعك…"));
-  navigator.geolocation.getCurrentPosition(pos => {
-    const d = haversineKm(pos.coords.latitude, pos.coords.longitude, g.coords.lat, g.coords.lng);
-    if (d <= 0.3) awardCheckin("location", g.id);
-    else toast(tL(`You're ~${d.toFixed(1)} km away — get closer to check in.`, `أنت على بعد ~${d.toFixed(1)} كم — اقترب لتسجيل الحضور.`));
-  }, () => toast(tL("Couldn't get location (permission denied).", "تعذّر تحديد الموقع (رُفض الإذن).")), { enableHighAccuracy: true, timeout: 10000 });
+  if (checkedInToday(u)) { toast(tL("Already checked in today", "سجّلت حضورك اليوم")); return; }
+  const streakAfter = streakOf(u) + 1;
+  const earned = checkinValue(streakAfter);
+  const checkins = [...(u.checkins || []), { ts: Date.now(), gymId: g.id, pts: earned }];
+  updateUser({ checkins, points: (u.points || 0) + earned });
+  if (typeof registerMember === "function") registerMember(currentUser());
+  reRenderSection();
+  const streakMsg = streakAfter > 1 ? tL(` · 🔥 ${streakAfter}-day streak!`, ` · 🔥 ${streakAfter} أيام متتالية!`) : "";
+  toast(tL(`+${earned} points!${streakMsg} 🎉`, `+${earned} نقطة!${streakMsg} 🎉`));
 }
 function startSubscription() {
   const gymId = val("subGym"), months = parseInt(val("subMonths"), 10) || 1;
@@ -158,37 +199,8 @@ function handleMembershipClick(e) {
   const hit = (s) => e.target.closest(s);
   if (hit("#startSub")) { startSubscription(); return true; }
   if (hit("#cancelSub")) { cancelSubscription(); return true; }
-  if (hit("#checkinLoc")) { checkInLocation(); return true; }
-  if (hit("#checkinPhotoBtn")) { const el = document.getElementById("checkinPhoto"); if (el) el.click(); return true; }
+  if (hit("#checkinBtn")) { checkIn(); return true; }
   const rd = hit("[data-redeem]"); if (rd) { redeemReward(rd.dataset.redeem); return true; }
   return false;
 }
-async function photoCheckin(file, g) {
-  toast(tL("Checking your photo…", "جارٍ فحص صورتك…"));
-  try {
-    const dataUrl = await fileToDataURL(file);   // fileToDataURL is defined in nutrition.js
-    const base64 = String(dataUrl).split(",")[1];
-    const r = await fetch("/.netlify/functions/verify-gym", {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ image_base64: base64, mime: file.type }),
-    });
-    if (r.ok) {
-      const j = await r.json();
-      if (j && typeof j.inGym === "boolean") {
-        if (j.inGym) awardCheckin("photo", g.id);
-        else toast(tL("That photo doesn't look like a gym — check in from inside.", "الصورة لا تبدو داخل نادٍ — سجّل من الداخل."), true);
-        return;
-      }
-    }
-  } catch (e) { /* fall through to demo */ }
-  awardCheckin("photo", g.id);   // demo fallback when AI isn't configured
-}
-function handleMembershipChange(e) {
-  if (e.target.id === "checkinPhoto") {
-    const u = currentUser(), g = memGym(u);
-    if (!subActive(u) || !g) { toast(tL("Subscribe to a gym first", "اشترك في نادٍ أولاً")); return true; }
-    if (e.target.files && e.target.files[0]) photoCheckin(e.target.files[0], g);
-    return true;
-  }
-  return false;
-}
+function handleMembershipChange() { return false; }

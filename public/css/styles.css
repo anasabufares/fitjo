@@ -341,6 +341,12 @@ img { max-width: 100%; }
 .pts-num { font-size: 40px; font-weight: 800; line-height: 1; color: var(--accent); }
 .pts-head .l { font-size: 12px; color: var(--muted); font-weight: 700; }
 .mem-actions { display: flex; flex-direction: column; gap: 8px; }
+.streak-pill { display: inline-flex; align-items: center; gap: 4px; font-weight: 800; font-size: 14px; white-space: nowrap; flex-shrink: 0;
+  padding: 8px 14px; border-radius: 999px; background: var(--surface); border: 1px solid var(--border); color: var(--muted); }
+.streak-pill.hot { color: #fff; background: linear-gradient(120deg, #f97316, #ef4444); border-color: transparent;
+  box-shadow: 0 6px 18px -6px rgba(239, 68, 68, .55); }
+.checkin-big { font-size: 17px; padding: 16px; margin-bottom: 10px; }
+.checkin-big:disabled { opacity: .7; }
 .rewards-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 6px 0 4px; }
 @media (max-width: 480px) { .rewards-grid { grid-template-columns: 1fr; } }
 .reward { background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; padding: 12px; text-align: center; }
