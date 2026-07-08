@@ -163,7 +163,15 @@ function renderServices() {
   const L = state.lang === "ar";
   $("#svcTitle").textContent = L ? "الخدمات" : "Services";
   $("#svcGymLbl").textContent = L ? "النادي" : "Gym";
-  $("#svcNutritionLbl").textContent = L ? "التغذية" : "Nutrition";
+  $("#svcNutritionLbl").innerHTML = `${L ? "التغذية" : "Nutrition"} <span class="svc-caret">▾</span>`;
+  // drop menu under the Nutrition tile: plan / calorie tracker / progress
+  $("#nutriMenu").innerHTML = [
+    ["plan", "🎯", L ? "خطتي" : "My plan"],
+    ["nutrition", "🍎", L ? "متتبّع السعرات" : "Calorie tracker"],
+    ["progress", "📈", L ? "تقدّمي" : "My progress"],
+  ].map(([k, ic, l]) => `<button class="menu-row" data-acct="${k}">
+      <span class="mr-ico">${ic}</span><span class="mr-txt"><span class="mr-t">${l}</span></span><span class="mr-chev">›</span>
+    </button>`).join("");
   $("#svcSuppsLbl").textContent = L ? "المكملات" : "Supplements";
   $("#svcRankLbl").textContent = L ? "التصنيف" : "Rank";
   $("#svcPointsLbl").textContent = L ? "نقطة" : "points";
@@ -538,7 +546,13 @@ function bind() {
   $("#currencySel").onchange = (e) => { state.currency = e.target.value; persist(); state.view === "detail" ? renderDetail(state.currentGym) : renderAll(); };
   // services hub
   $("#svcGym").onclick = () => { if (state.view === "detail") showList(); document.querySelector(".layout").scrollIntoView({ behavior: "smooth" }); };
-  $("#svcNutrition").onclick = () => openAccountSection("nutrition");
+  $("#svcNutrition").onclick = (e) => { e.stopPropagation(); const m = $("#nutriMenu"); m.hidden = !m.hidden; };
+  $("#nutriMenu").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-acct]"); if (!b) return;
+    $("#nutriMenu").hidden = true;
+    openAccountSection(b.dataset.acct);
+  });
+  document.addEventListener("click", (e) => { if (!e.target.closest(".svc-wrap")) $("#nutriMenu").hidden = true; });
   $("#svcSupps").onclick = () => openAccountSection("supplements");
   $("#svcRank").onclick = () => openAccountSection("rank");
   $("#svcPoints").onclick = () => openAccountSection("membership");

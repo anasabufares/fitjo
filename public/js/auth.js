@@ -217,8 +217,8 @@ function accountHTML() {
   const u = currentUser();
   const nav = [
     ["profile", "👤", t("myProfile")], ["membership", "🎟️", tL("Membership", "العضوية")],
-    ["plan", "🎯", t("myPlan")], ["workouts", "🏋️", tL("Workouts", "التمارين")], ["rank", "🏆", t("rankTitle")], ["progress", "📈", t("myProgress")],
-    ["nutrition", "🍎", t("calorieTracker")], ["inbody", "🧬", tL("In-body", "فحص الجسم")], ["supplements", "💊", tL("Supplements", "المكملات")],
+    ["workouts", "🏋️", tL("Workouts", "التمارين")], ["rank", "🏆", t("rankTitle")],
+    ["inbody", "🧬", tL("In-body", "فحص الجسم")], ["supplements", "💊", tL("Supplements", "المكملات")],
     ["security", "🔒", t("security")], ["notifications", "🔔", t("notifications")],
     ["preferences", "⚙️", t("preferences")], ["danger", "⚠️", t("dangerZone")],
   ];

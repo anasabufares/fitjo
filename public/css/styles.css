@@ -752,3 +752,16 @@ h1, .hero h1, .acct-body h3 { letter-spacing: -.02em; font-weight: 900; }
 .faq p { padding: 0 14px 12px; font-size: 13px; color: var(--muted); }
 .doc p { font-size: 13.5px; margin-top: 10px; }
 .doc b { display: inline; }
+
+/* nutrition tile drop menu */
+.svc-wrap { position: relative; display: flex; }
+.svc-wrap .svc { flex: 1; }
+.svc-caret { font-size: 10px; color: var(--muted); }
+.svc-menu {
+  position: absolute; top: calc(100% + 6px); inset-inline-start: 0; z-index: 30;
+  min-width: 210px; padding: 6px; display: flex; flex-direction: column; gap: 4px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+  box-shadow: 0 18px 42px -16px rgba(15, 23, 42, .35);
+}
+.svc-menu .menu-row { padding: 10px 12px; border-radius: 10px; border-color: transparent; }
+.svc-menu .menu-row:hover { border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); }
