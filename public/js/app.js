@@ -203,8 +203,10 @@ function renderRankTile(u) {
 }
 
 /* ---------- inline service panels (show in place of the gym list) ---------- */
-const SVC_GROUPS = { nutrition: ["plan", "nutrition", "progress"], rank: ["rank"], supplements: ["supplements"] };
+const SVC_GROUPS = { gym: ["gyms", "workouts"], nutrition: ["plan", "nutrition", "progress"], rank: ["rank"], supplements: ["supplements"] };
 const SVC_TABS = {
+  gyms: ["🏋️", "Gyms", "الأندية"],
+  workouts: ["💪", "Workouts", "التمارين"],
   plan: ["🎯", "My plan", "خطتي"],
   nutrition: ["🍎", "Calorie tracker", "متتبّع السعرات"],
   progress: ["📈", "My progress", "تقدّمي"],
@@ -218,11 +220,10 @@ function openServicePanel(group, sub) {
   if (typeof currentUser !== "function" || !currentUser()) return openAuth("signin");
   svcGroup = group;
   svcSection = sub || SVC_GROUPS[group][0];
-  acctSection = svcSection;          // section helpers re-render via #acctBody
+  if (svcSection !== "gyms") acctSection = svcSection;   // section helpers re-render via #acctBody
   closeAuth();
   renderServicePanel();
   $("#svcPanel").hidden = false;
-  $(".layout").style.display = "none";
   $("#svcPanel").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 function openNutritionPanel(sub) { openServicePanel("nutrition", sub); }
@@ -239,12 +240,15 @@ function renderServicePanel() {
   const head = keys.length > 1
     ? `<div class="tabs">${keys.map(k => `<button class="tab ${svcSection === k ? "active" : ""}" data-svctab="${k}">${SVC_TABS[k][0]} ${SVC_TABS[k][L ? 2 : 1]}</button>`).join("")}</div>`
     : `<div class="svcp-title">${SVC_TABS[svcSection][0]} ${SVC_TABS[svcSection][L ? 2 : 1]}</div>`;
+  // the "gyms" tab shows the real directory below the tab bar instead of a section
+  const showsGyms = svcSection === "gyms";
   $("#svcPanel").innerHTML = `
     <div class="svcp-head">
       ${head}
       <button class="icon-btn" id="svcPanelClose" title="✕">✕</button>
     </div>
-    <div class="acct-body svcp-body" id="acctBody">${sectionHTML(svcSection)}</div>`;
+    ${showsGyms ? "" : `<div class="acct-body svcp-body" id="acctBody">${sectionHTML(svcSection)}</div>`}`;
+  $(".layout").style.display = showsGyms ? "" : "none";
 }
 
 /* ---------- Render: filters panel ---------- */
@@ -611,14 +615,24 @@ function bind() {
   $("#themeToggle").onclick = () => { state.theme = state.theme === "light" ? "dark" : "light"; persist(); applyChrome(); renderControls(); };
   $("#currencySel").onchange = (e) => { state.currency = e.target.value; persist(); state.view === "detail" ? renderDetail(state.currentGym) : renderAll(); };
   // services hub
-  $("#svcGym").onclick = () => { closeServicePanel(); if (state.view === "detail") showList(); document.querySelector(".layout").scrollIntoView({ behavior: "smooth" }); };
+  $("#svcGym").onclick = () => {
+    if (svcGroup === "gym") return closeServicePanel();
+    if (state.view === "detail") showList();
+    if (typeof currentUser === "function" && currentUser()) openServicePanel("gym");
+    else { closeServicePanel(); document.querySelector(".layout").scrollIntoView({ behavior: "smooth" }); }
+  };
   $("#svcNutrition").onclick = () => (svcGroup === "nutrition" ? closeServicePanel() : openServicePanel("nutrition"));
   $("#svcRank").onclick = () => (svcGroup === "rank" ? closeServicePanel() : openServicePanel("rank"));
   $("#svcSupps").onclick = () => (svcGroup === "supplements" ? closeServicePanel() : openServicePanel("supplements"));
   const sp = $("#svcPanel");
   sp.addEventListener("click", (e) => {
     const tb = e.target.closest("[data-svctab]");
-    if (tb) { svcSection = tb.dataset.svctab; acctSection = svcSection; renderServicePanel(); return; }
+    if (tb) {
+      svcSection = tb.dataset.svctab;
+      if (svcSection !== "gyms") acctSection = svcSection;
+      renderServicePanel();
+      return;
+    }
     if (e.target.closest("#svcPanelClose")) return closeServicePanel();
     if (typeof onAuthClick === "function") onAuthClick(e);
   });

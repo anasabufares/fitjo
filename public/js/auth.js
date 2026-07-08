@@ -219,7 +219,7 @@ function accountHTML() {
   const u = currentUser();
   const nav = [
     ["profile", "👤", t("myProfile")], ["membership", "🎟️", tL("Membership", "العضوية")],
-    ["workouts", "🏋️", tL("Workouts", "التمارين")], ["inbody", "🧬", tL("In-body", "فحص الجسم")],
+    ["inbody", "🧬", tL("In-body", "فحص الجسم")],
     ["security", "🔒", t("security")], ["notifications", "🔔", t("notifications")],
     ["preferences", "⚙️", t("preferences")], ["danger", "⚠️", t("dangerZone")],
   ];
