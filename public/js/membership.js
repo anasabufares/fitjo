@@ -19,7 +19,7 @@ let pendingSubGym = null;    // gym preselected from a gym's "Subscribe" button
 const REWARDS = [
   // tier 1 — everyday perks (a week or two of check-ins)
   { id: "r1", icon: "🥤", name: { en: "Free protein shake", ar: "شيك بروتين مجاني" }, cost: 150, valueJod: 4, tier: 1 },
-  { id: "r2", icon: "🧴", name: { en: "FitJo gym towel", ar: "منشفة FitJo" }, cost: 250, valueJod: 8, tier: 1 },
+  { id: "r2", icon: "💧", name: { en: "FitJo water bottle", ar: "زجاجة ماء FitJo" }, cost: 250, valueJod: 8, tier: 1 },
   { id: "r3", icon: "🎟️", name: { en: "Bring-a-friend day pass", ar: "دخول يوم لصديق" }, cost: 350, valueJod: 12, tier: 1 },
   // tier 2 — worth working for (about a month)
   { id: "r4", icon: "💊", name: { en: "25% off a supplement stack", ar: "خصم 25% على المكملات" }, cost: 600, valueJod: 25, tier: 2 },
